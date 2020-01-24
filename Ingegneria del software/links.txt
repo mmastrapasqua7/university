@@ -1,0 +1,39 @@
+https://leanpub.com/leprechauns
+http://www.ibm.com/developerworks/rational/library/content/RationalEdge/dec00/FromWaterfalltoIterativeDevelopmentDec00.pdf
+http://sunset.usc.edu/~aegyed/publications/Using_the_WinWin_Spiral_Model-A_Case_Study.pdf
+http://sunset.usc.edu/research/WINWIN/winwin_main.html
+http://agilemanifesto.org
+http://www.drdobbs.com/lean-programming/184414734
+google: B. Meyer Agile! The Good, the Hype and the Ugly
+http://revctrl.org/CrissCrossMerge
+http://ndpsoftware.com/git-cheatsheet.html
+http://www.catb.org/~esr/writings/cathedral-bazaar/
+google: http://www.moonviewscientific.com/essays/software_lifecycle.htm
+http://perens.com/works/articles/Economic.html
+http://www.moonviewscientific.com/essays/software_lifecycle.htm
+google: Bruce Perens: The emerging economic paradigm of Open Source
+http://wiki.bazaar.canonical.com/Workflows
+google: git flow
+http://jakarta.apache.org/ant/index.html
+https://lwn.net/Articles/281849/
+http://ericsink.com/entries/dbts_fossil.html
+https://www.stationary-traveller.eu/distributed-bug-trackers.html
+http://syncwith.us/
+http://tigris.org
+http://openhub.net
+http://www-01.ibm.com/software/awdtools/rmc/library/
+http://www.ambysoft.com/unifiedprocess/
+http://www.objectmentor.com/resources/articles/dip.pdf
+http://c2.com/doc/oopsla89/paper.html
+http://www.softstar-inc.com/Download/Intro%20to%20CRC.pdf
+http://www.javaworld.com/javaworld/jw-04-2002/jw-0426-designpatterns.html
+http://www.uml-diagrams.org/sequence-diagrams.html
+http://xunitpatterns.com/
+http://site.mockito.org/
+google: From “Software Formal Inspections Guidebook,” Office of Safety and Mission Assurance, NASA-GB-A302 approved August 1993
+google: D. Parnas & D. Weiss, “Active design reviews: Principles and practices.” Proc. ICSE , Aug. 1985, pp. 132-136.
+http://www2.umassd.edu/SWPI/ISERN/ISERN-98-10.pdf
+http://www2.umassd.edu/SWPI/TechnicalReview/r4094.pdf
+http://www.st.cs.uni-saarland.de/dd/
+
+
