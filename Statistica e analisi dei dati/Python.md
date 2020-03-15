@@ -85,9 +85,35 @@ Prima di ogni foglio .ipynb:
 
 ## Dataframe Pandas
 
+##### Creazione
+
+  ```python
+  heroes_dataframe = pd.read_csv('data/heroes.csv', sep=';', index_col=0)
+  ```
+
+##### Accesso
+
+  ```python
+  heroes_dataframe['Gender'] # accesso per colonna (carattere)
+
+  heroes_dataframe.loc['Wonder Girl'] # accesso per riga
+  heroes_dataframe.loc['Agent 13':'Air-Walker'] # accesso per riga tramite slicing
+
+  heroes_dataframe.loc['Professor X', 'Height'] # accesso specifico riga colonna
+  heroes_dataframe.loc['Professor X', 'Height':'Weight'] # accesso specifico riga colonna
+  heroes_dataframe.iloc[[106, 103], [3, 4]]
 
 
+  heroes_dataframe[heroes_dataframe['First appearance'] > 1900] # query
+  ```
 
+##### Ordinamento
+
+  ```python
+  heroes_dataframe.sort_values(by='Weight')
+  heroes_dataframe.sort_values(by='Weight', ascending=False)
+  heroes_dataframe.sort_index()
+  ```
 
 
 
