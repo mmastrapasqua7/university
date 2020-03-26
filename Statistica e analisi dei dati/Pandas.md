@@ -25,6 +25,27 @@ series = pd.Series(values, index=names)
 
 #### Uso
 
+```python
+series_index = series.index
+series_values = series.values
+
+value = series.loc['Index value']
+value = series.iloc[42]
+index = series.index.get_loc('Index value')
+
+subseries = series.loc['Index value 1':'Index value 2']
+subseries = series.iloc[45:55]
+subseries = series.loc[series > 2000] # query on values
+subseries = series.loc[(series > 10) & (series < 90)]
+subseries = series.sort_index()
+subseries = series.sort_values(ascending=False)
+
+values_absolute_frequence = series.value_counts()
+modified_series = series/100
+modified_series = series.apply(lambda element: element/100)
+new_series = series1 / series2
+```
+
 ## Dataframe Pandas
 
 Un dataframe è una collezione di Pandas Series che hanno lo stesso indice, ed è quindi un insieme di osservazioni di vari caratteri per una popolazione di individui
@@ -52,5 +73,7 @@ dataframe_rows = dataframe.loc['Index value 1':'Index value 2']
 dataframe_row = dataframe.iloc[1]
 dataframe_rows = dataframe.iloc[0:10]
 
-new_dataframe = dataframe[dataframe['Column name'] == 'Value']
+new_dataframe = dataframe[dataframe['Column name'] > 2000] # query on values
+new_dataframe = dataframe.sort_values(by='Column name', ascending=False)
+new_dataframe = dataframe.sort_index()
 ```
