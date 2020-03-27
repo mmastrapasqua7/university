@@ -39,6 +39,7 @@ subseries = series.loc[series > 2000] # query on values
 subseries = series.loc[(series > 10) & (series < 90)]
 subseries = series.sort_index()
 subseries = series.sort_values(ascending=False)
+subseries = series.between(150, 220)
 
 values_absolute_frequence = series.value_counts()
 modified_series = series/100
@@ -56,6 +57,11 @@ Un dataframe Ã¨ una collezione di Pandas Series che hanno lo stesso indice, ed Ã
 import pandas as pd
 
 dataframe = pd.read_csv('/path/to/file.csv', sep=';')
+
+dataframe = pd.crosstab(index=dataframe['Column name'],
+						columns=['Name you want for column'],
+						colnames=[''],
+						normalize=True) # True = relative frequences
 ```
 
 #### Uso
@@ -65,7 +71,7 @@ dataframe_index = dataframe.index
 dataframe_columns = dataframe.columns
 dataframe_values = dataframe.values
 
-dataframe_series = dataframe['Column name']
+series = dataframe['Column name']
 
 dataframe_row = dataframe.loc['Index value']
 dataframe_rows = dataframe.loc['Index value 1':'Index value 2']
@@ -76,4 +82,6 @@ dataframe_rows = dataframe.iloc[0:10]
 new_dataframe = dataframe[dataframe['Column name'] > 2000] # query on values
 new_dataframe = dataframe.sort_values(by='Column name', ascending=False)
 new_dataframe = dataframe.sort_index()
+
+modified_dataframe = dataframe.apply(lambda p: np.round(p, 2))
 ```
