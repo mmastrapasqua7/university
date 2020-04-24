@@ -21,7 +21,7 @@ plt.axis('equal') # 2D
 plt.show()
 
 # istogramma
-series.hist(bins=50) # ampiezza classi
+series.plot.hist(bins=50) # ampiezza classi
 plt.show()
 
 # punti

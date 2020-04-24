@@ -56,12 +56,15 @@ Un dataframe Ã¨ una collezione di Pandas Series che hanno lo stesso indice, ed Ã
 ```python
 import pandas as pd
 
+dataframe = pd.DataFrame.from_csv('/path/to/file.csv', sep=';')
+
 dataframe = pd.read_csv('/path/to/file.csv', sep=';')
 
 dataframe = pd.crosstab(index=dataframe['Column name'],
 						columns=['Name you want for column'],
 						colnames=[''],
 						normalize=True) # True = relative frequences
+
 ```
 
 #### Uso
