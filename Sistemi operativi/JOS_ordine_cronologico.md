@@ -94,6 +94,7 @@ pte_t entry_pgtable[NPTENTRIES] = {
 void i386_init(void) {
   mem_init();
   ...
+  trap_init();
 }
 ```
 
@@ -245,7 +246,7 @@ struct PageInfo *page_lookup(pde_t *pgdir, void *va, pte_t **pte_store) {
   if (!pte || !(*pte & PTE_P)) { // if pte doesn't exist or is not present
     return NULL;   
   }
-  
+
   if (pte_store) { // save pte
     *pte_store = pte;
   }
@@ -325,4 +326,232 @@ physaddr_t page2pa(struct PageInfo *pp) {
 void* page2kva(struct PageInfo *pp) {
   return KADDR(page2pa(pp));
 }
+```
+
+## (6) kern/trap.c
+
+```c
+struct Segdesc gdt[NCPU + 5] = {
+  // 0x0 - unused (always faults -- for trapping NULL far pointers)
+  SEG_NULL,
+  // 0x8 - kernel code segment
+  [GD_KT >> 3] = SEG(STA_X | STA_R, 0x0, 0xffffffff, 0),
+
+  // 0x10 - kernel data segment
+  [GD_KD >> 3] = SEG(STA_W, 0x0, 0xffffffff, 0),
+
+  // 0x18 - user code segment
+  [GD_UT >> 3] = SEG(STA_X | STA_R, 0x0, 0xffffffff, 3),
+
+  // 0x20 - user data segment
+  [GD_UD >> 3] = SEG(STA_W, 0x0, 0xffffffff, 3),
+
+  // Per-CPU TSS descriptors (starting from GD_TSS0) are initialized
+  // in trap_init_percpu()
+  [GD_TSS0 >> 3] = SEG_NULL
+};
+
+struct Gatedesc idt[256] = {
+  { 0 },
+};
+
+struct Pseudodesc idt_pd = {
+  sizeof(idt) - 1,
+  (uint32_t) idt
+};
+
+void trap_init(void) {
+  extern void handler0();
+  extern void handler0();
+  ...
+  extern void handler13();
+  extern void handler14();
+
+  extern void irq0_entry();
+  extern void irq1_entry();
+  ...
+  extern void irq13_entry();
+  extern void irq14_entry();
+
+  // where SETGATE(gate, istrap, selector, offset, dpl)
+  SETGATE(idt[T_DIVIDE], 0, GD_KT, handler0, 0);
+  SETGATE(idt[T_DEBUG], 0, GD_KT, handler1, 0);
+  ...
+  SETGATE(idt[T_PGFLT], 0, GD_KT, handler14, 0);
+  SETGATE(idt[T_FPERR], 0, GD_KT, handler16, 0);
+
+  trap_init_percpu();
+}
+
+void trap_init_percpu() {
+  thiscpu->cpu_ts.ts_esp0 = KSTACKTOP - cpunum() * (KSTKSIZE + KSTKGAP);
+  ts->cpu_ts.ts_ss0 = GD_KD;
+
+  // Initialize the TSS slot of the gdt.
+  gdt[(GD_TSS0 >> 3) + cpunum()] =
+    SEG16(STS_T32A, (uint32_t) (&thiscpu->cpu_ts), sizeof(struct Taskstate), 0);
+
+  gdt[(GD_TSS0 >> 3) + cpunum()].sd_s = 0;
+
+  // Load the TSS selector (like other segment selectors, the
+  // bottom three bits are special; we leave them 0)
+  ltr(GD_TSS0 + (cpunum() << 3));
+
+  // Load the IDT
+  lidt(&idt_pd);
+}
+
+void trap(struct Trapframe *tf) {
+  // where 0x11 = USER MODE
+  if ((tf->tf_cs & 0x11) == 0x11) { // if trapped from user mode
+    assert(curenv);
+    curenv->env_tf = *tf;
+    tf = &(curenv->env_tf);
+  }
+  trap_dispatch(tf);
+}
+
+static void trap_dispatch(struct Trapframe *tf) {
+  if (tf->tf_trapno == IRQ_OFFSET + IRQ_TIMER) {
+    lapic_eoi();
+    sched_yield();
+    return;
+  }
+
+  if (tf->tf_cs == GD_KT) {
+    panic("unhandled trap in kernel");
+  }
+
+  switch (tf->tf_trapno) {
+    case T_PGFLT:
+      page_fault_handler(tf);
+      break;
+    case T_BRKPT:
+      monitor(tf);
+      break;
+    case T_SYSCALL:
+      tf->tf_regs.reg_eax = syscall(
+        tf->tf_regs.reg_edx,
+        tf->tf_regs.reg_ecx,
+        tf->tf_regs.reg_ebx,
+        tf->tf_regs.reg_edi,
+        tf->tf_regs.reg_esi);
+      return;
+    default:
+      env_destroy(curenv);
+      return;
+  }
+
+  if (curenv && curenv->env_status == ENV_RUNNING) {
+    env_run(curenv);
+  } else {
+    sched_yield();  
+  }
+}
+```
+
+## inc/mmu.h
+
+```c
+// Task state segment format (as described by the Pentium architecture book)
+struct Taskstate {
+    ...
+    uintptr_t ts_esp0;   // Stack pointers and segment selectors
+    uint16_t ts_ss0;     // after an increase in privilege level
+    ...
+    physaddr_t ts_cr3;   // Page directory base
+    uintptr_t ts_eip;    // Saved state from last task switch
+    uint32_t ts_eflags;
+    uint32_t ts_eax;     // More saved state (registers)
+    uint32_t ts_ecx;
+    uint32_t ts_edx;
+    uint32_t ts_ebx;
+    uintptr_t ts_esp;
+    uintptr_t ts_ebp;
+    uint32_t ts_esi;
+    uint32_t ts_edi;
+    uint16_t ts_es;      // Even more saved state (segment selectors)
+    ...
+    uint16_t ts_t;       // Trap on task switch
+    uint16_t ts_iomb;    // I/O map base address
+};
+
+#define SETGATE(gate, istrap, sel, off, dpl) {
+  (gate).gd_off_15_0 = (uint32_t) (off) & 0xffff;
+  (gate).gd_sel = (sel);
+  (gate).gd_args = 0;
+  (gate).gd_rsv1 = 0;
+  (gate).gd_type = (istrap) ? STS_TG32 : STS_IG32;
+  (gate).gd_s = 0;
+  (gate).gd_dpl = (dpl);
+  (gate).gd_p = 1;
+  (gate).gd_off_31_16 = (uint32_t) (off) >> 16;
+}
+```
+
+## kern/trapentry.S
+
+```nasm
+/* TRAPHANDLER defines a globally-visible function for handling a trap.
+ * It pushes a trap number onto the stack, then jumps to _alltraps.
+ * Use TRAPHANDLER for traps where the CPU automatically pushes an error
+ * code.
+ */
+
+#define TRAPHANDLER(name, num)
+  .globl name
+  .type name, @function
+  .align 2
+  name:
+    pushl $(num)
+    jmp _alltraps
+
+/* Use TRAPHANDLER_NOEC for traps where the CPU doesn't push an error
+ * code. It pushes a 0 in place of the error code, so the trap frame
+ * has the same format in either case.
+ */
+
+#define TRAPHANDLER_NOEC(name, num)
+    .globl name
+    .type name, @function
+    .align 2
+    name:
+      pushl $0
+      pushl $(num)
+      jmp _alltraps
+
+.text
+
+TRAPHANDLER_NOEC(handler0, T_DIVIDE);
+TRAPHANDLER_NOEC(handler1, T_DEBUG);
+..
+TRAPHANDLER(handler13, T_GPFLT);
+TRAPHANDLER(handler14, T_PGFLT);
+TRAPHANDLER_NOEC(handler16, T_FPERR);
+TRAPHANDLER_NOEC(irq0_entry, IRQ_OFFSET + 0);
+TRAPHANDLER_NOEC(irq1_entry, IRQ_OFFSET + 1);
+...
+TRAPHANDLER_NOEC(irq13_entry, IRQ_OFFSET + 13);
+TRAPHANDLER_NOEC(irq14_entry, IRQ_OFFSET + 14);
+
+_alltraps:
+  push %ds
+  push %es
+  pushal
+
+  mov $GD_KD, %ax
+  mov %ax, %ds
+  mov %ax, %es
+
+  pushl %esp
+  call trap
+
+.data
+.globl handlers
+handlers:
+  .long handler0
+  .long handler1
+  ...
+  .long handler254
+  .long handler255
 ```
