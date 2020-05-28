@@ -453,29 +453,6 @@ static void trap_dispatch(struct Trapframe *tf) {
 ## inc/mmu.h
 
 ```c
-// Task state segment format (as described by the Pentium architecture book)
-struct Taskstate {
-    ...
-    uintptr_t ts_esp0;   // Stack pointers and segment selectors
-    uint16_t ts_ss0;     // after an increase in privilege level
-    ...
-    physaddr_t ts_cr3;   // Page directory base
-    uintptr_t ts_eip;    // Saved state from last task switch
-    uint32_t ts_eflags;
-    uint32_t ts_eax;     // More saved state (registers)
-    uint32_t ts_ecx;
-    uint32_t ts_edx;
-    uint32_t ts_ebx;
-    uintptr_t ts_esp;
-    uintptr_t ts_ebp;
-    uint32_t ts_esi;
-    uint32_t ts_edi;
-    uint16_t ts_es;      // Even more saved state (segment selectors)
-    ...
-    uint16_t ts_t;       // Trap on task switch
-    uint16_t ts_iomb;    // I/O map base address
-};
-
 #define SETGATE(gate, istrap, sel, off, dpl) {
   (gate).gd_off_15_0 = (uint32_t) (off) & 0xffff;
   (gate).gd_sel = (sel);
@@ -486,6 +463,30 @@ struct Taskstate {
   (gate).gd_dpl = (dpl);
   (gate).gd_p = 1;
   (gate).gd_off_31_16 = (uint32_t) (off) >> 16;
+}
+
+// Task state segment format (as described by the Pentium architecture book)
+struct Taskstate {
+  ...
+  uintptr_t ts_esp0;   // Stack pointers and segment selectors
+  uint16_t ts_ss0;     // after an increase in privilege level
+  ...
+};
+
+struct Trapframe {
+  struct PushRegs tf_regs;
+  uint16_t tf_es;
+  uint16_t tf_ds;
+  uint32_t tf_trapno;
+  
+  /* below here defined by x86 hardware */
+  uint32_t tf_err;
+  uintptr_t tf_eip;
+  uint16_t tf_cs;
+  uint32_t tf_eflags;
+
+  uintptr_t tf_esp; // only when crossing rings, such as
+  uint16_t tf_ss;   // from user to kernel
 }
 ```
 
@@ -554,4 +555,283 @@ handlers:
   ...
   .long handler254
   .long handler255
+```
+
+## (7) kern/env.c
+
+```c
+// Global descriptor table.
+//
+// Set up global descriptor table (GDT) with separate segments for
+// kernel mode and user mode.  Segments serve many purposes on the x86.
+// We don't use any of their memory-mapping capabilities, but we need
+// them to switch privilege levels.
+//
+// The kernel and user segments are identical except for the DPL.
+// To load the SS register, the CPL must equal the DPL.  Thus,
+// we must duplicate the segments for the user and the kernel.
+//
+// In particular, the last argument to the SEG macro used in the
+// definition of gdt specifies the Descriptor Privilege Level (DPL)
+// of that descriptor: 0 for kernel and 3 for user.
+//
+struct Segdesc gdt[NCPU + 5] = {
+  // 0x0 - unused (always faults -- for trapping NULL far pointers)
+  SEG_NULL,
+
+  // 0x8 - kernel code segment
+  [GD_KT >> 3] = SEG(STA_X | STA_R, 0x0, 0xffffffff, 0),
+
+  // 0x10 - kernel data segment
+  [GD_KD >> 3] = SEG(STA_W, 0x0, 0xffffffff, 0),
+
+  // 0x18 - user code segment
+  [GD_UT >> 3] = SEG(STA_X | STA_R, 0x0, 0xffffffff, 3),
+
+  // 0x20 - user data segment
+  [GD_UD >> 3] = SEG(STA_W, 0x0, 0xffffffff, 3),
+
+  // Per-CPU TSS descriptors (starting from GD_TSS0) are initialized
+  // in trap_init_percpu()
+  [GD_TSS0 >> 3] = SEG_NULL
+};
+
+struct Pseudodesc gdt_pd = {
+	sizeof(gdt) - 1, (unsigned long) gdt
+};
+
+enum {
+  ENV_FREE = 0,
+  ENV_DYING,
+  ENV_RUNNABLE,
+  ENV_RUNNING,
+  ENV_NOT_RUNNABLE
+};
+
+struct Env {
+  struct Trapframe env_tf;	// Saved registers
+  struct Env *env_link;		// Next free Env
+  envid_t env_id;			// Unique environment identifier
+  envid_t env_parent_id;	// env_id of this env's parent
+  enum EnvType env_type;	// Indicates special system environments
+  unsigned env_status;		// Status of the environment
+  uint32_t env_runs;		// Number of times environment has run
+  int env_cpunum;			// The CPU that the env is running on
+
+  // Address space
+  pde_t *env_pgdir;		    // Kernel virtual address of page dir
+
+  // Exception handling
+  void *env_pgfault_upcall;	// Page fault upcall entry point
+
+  // Lab 4 IPC
+  bool env_ipc_recving;		// Env is blocked receiving
+  void *env_ipc_dstva;		// VA at which to map received page
+  uint32_t env_ipc_value;	// Data value sent to us
+  envid_t env_ipc_from;		// envid of the sender
+  int env_ipc_perm;		    // Perm of page mapping received
+};
+
+struct Env *envs = NULL;		  // All environments
+struct Env *curenv = NULL;        // Current environment
+static struct Env *env_free_list; // Free environment list
+
+void env_init(void) {
+  // Set up envs array
+  env_free_list = envs;
+  int i;
+  for (i = 0; i < NENV; i++) {
+    envs[i].env_id = 0;
+    envs[i].env_status = ENV_FREE;
+    envs[i].env_link = (envs + i + 1);
+  }
+  (envs + i - 1)->env_link = NULL;
+
+  // Per-CPU part of the initialization
+  env_init_percpu();
+}
+
+
+// Initialize the kernel virtual memory layout for environment e.
+// Allocate a page directory, set e->env_pgdir accordingly,
+// and initialize the kernel portion of the new environment's address space.
+// Do NOT (yet) map anything into the user portion
+// of the environment's virtual address space.
+static int env_setup_vm(struct Env *e) {
+  int i;
+  struct PageInfo *p = NULL;
+
+  // Allocate a page for the page directory
+  if (!(p = page_alloc(ALLOC_ZERO))) {
+    return -E_NO_MEM;
+  }
+
+  // Now, set e->env_pgdir and initialize the page directory.
+  p->pp_ref++;
+  e->env_pgdir = (pde_t *)page2kva(p);
+  for (i = PDX(UTOP); i < NPDENTRIES; i++) {
+    e->env_pgdir[i] = kern_pgdir[i];
+  }
+
+  // UVPT maps the env's own page table read-only.
+  // Permissions: kernel R, user R
+  e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_P | PTE_U;
+
+  return 0;
+}
+
+
+int env_alloc(struct Env **newenv_store, envid_t parent_id) {
+  int32_t generation;
+  int r;
+  struct Env *e;
+
+  if (!(e = env_free_list)) {
+    return -E_NO_FREE_ENV;
+  }
+
+  // Allocate and set up the page directory for this environment.
+  if ((r = env_setup_vm(e)) < 0) {
+    return r;
+  }
+
+  // Generate an env_id for this environment.
+  generation = (e->env_id + (1 << ENVGENSHIFT)) & ~(NENV - 1);
+  if (generation <= 0) {
+    generation = 1 << ENVGENSHIFT;
+  }
+  e->env_id = generation | (e - envs);
+
+  // Set the basic status variables.
+  e->env_parent_id = parent_id;
+  e->env_type = ENV_TYPE_USER;
+  e->env_status = ENV_RUNNABLE;
+  e->env_runs = 0;
+
+  // Clear out all the saved register state,
+  // to prevent the register values
+  // of a prior environment inhabiting this Env structure
+  // from "leaking" into our new environment.
+  memset(&e->env_tf, 0, sizeof(e->env_tf));
+
+  // Set up appropriate initial values for the segment registers.
+  // GD_UD is the user data segment selector in the GDT, and
+  // GD_UT is the user text segment selector (see inc/memlayout.h).
+  // The low 2 bits of each segment register contains the
+  // Requestor Privilege Level (RPL); 3 means user mode.  When
+  // we switch privilege levels, the hardware does various
+  // checks involving the RPL and the Descriptor Privilege Level
+  // (DPL) stored in the descriptors themselves.
+  e->env_tf.tf_ds = GD_UD | 3;
+  e->env_tf.tf_es = GD_UD | 3;
+  e->env_tf.tf_ss = GD_UD | 3;
+  e->env_tf.tf_esp = USTACKTOP;
+  e->env_tf.tf_cs = GD_UT | 3;
+
+  // Enable interrupts while in user mode.
+  e->env_tf.tf_eflags = FL_IF;
+  e->env_pgfault_upcall = 0;
+  e->env_ipc_recving = 0;
+
+  env_free_list = e->env_link;
+  *newenv_store = e;
+
+  return 0;
+}
+
+static envid_t sys_exofork(void) {
+  struct Env *newenv;
+
+  int result = env_alloc(&newenv, thiscpu->cpu_env->env_id);
+  if (result) {
+    panic("sys_exofork: problems with env_alloc\n")
+    return result;
+  }
+
+  newenv->env_status = ENV_NOT_RUNNABLE;
+  newenv->env_tf = thiscpu->cpu_env->env_tf;
+  newenv->env_tf.tf_regs.reg_eax = 0;
+
+  return newenv->env_id;
+}
+
+static void region_alloc(struct Env *e, void *va, size_t len) {
+  uint32_t virt_add = ROUNDDOWN((uint32_t)va, PGSIZE);
+  uint32_t size = ROUNDUP((uint32_t)len, PGSIZE);
+
+  for (int i = 0; i < size; i += PGSIZE) {
+    int rc = page_insert(
+      e->env_pgdir, page_alloc(size),(void *)virt_add + i, PTE_U | PTE_W);
+    if (rc) {
+      panic("page_insert failed\n")
+    }
+  }
+}
+
+static void load_icode(struct Env *e, uint8_t *binary, size_t size) {
+  struct Proghdr *ph, *eph;
+  ph = (struct Proghdr *)((uint8_t *)PROGHDR + PROGHDR->e_phoff);
+  eph = ph + PROGHDR->e_phnum;
+  lcr3(PADDR(e->env_pgdir));
+  
+  for (; ph < eph; ph++) {
+    if (ph->p_type == ELF_PROG_LOAD) {
+      region_alloc(e, (void*)ph->p_va, ph->p_memsz);
+      memset((void *)ph->p_va, 0, ph->p_memsz);
+      memcpy((void *)ph->p_va, binary + ph->p_offset, ph->p_filesz);
+    }
+  }
+
+  lcr3(PADDR(kern_pgdir));
+  e_env_tf.tf_eip = PROGHDR->e_entry;
+  region_alloc(e, (void *)USTACKTOP - PGSIZE, PGSIZE);
+}
+
+void sched_yield() {
+  struct Env *idle;
+  int i, k;
+  if (thiscpu->cpu_env == NULL) {
+    i = 0;
+  } else {
+    i = ENVX(thiscpu->cpu_env->env_id) + 1;
+  }
+
+  for (k = 0; k < NENV; k++) {
+    if (envs[i].env_status == ENV_RUNNABLE) {
+      env_run(&envs[i]);
+    }
+    i = (i + 1) % NENV;
+  }
+
+  if ((thiscpu->cpu_env != NULL) &&
+      (thiscpu->cpu_env->env_status == ENV_RUNNING)) {
+    env_run(thiscpu->cpu_env);
+  }
+}
+
+void env_run(struct Env *e) {
+  if (curenv != e) {
+    if (curenv && curenv->env_status == ENV_RUNNING) {
+      curenv->env_status = ENV_RUNNABLE;
+    }
+    curenv = e;
+    e->env_status = ENV_RUNNING;
+    e->env_runs += 1;
+    lcr3(e->env_cr3);    
+  }
+
+  env_pop_tf(&(e->env_tf));
+}
+
+void env_pop_tf(struct Trapframe *tf) {
+  asm volatile(
+    "\tmovl %0, %%esp\n"
+    "\tpopal\n"
+    "\tpopl %%es\n"
+    "\tpopl %%ds\n"
+    "\taddl $0x8, %%esp\n" // skip tf_trapno and tf_errcode
+    "\tiret\n"
+    : : "g" (tf) : "memory");
+  panic("iret failed");  // mostly to placate the compiler
+}
 ```
