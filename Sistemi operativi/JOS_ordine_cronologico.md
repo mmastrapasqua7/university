@@ -478,7 +478,7 @@ struct Trapframe {
   uint16_t tf_es;
   uint16_t tf_ds;
   uint32_t tf_trapno;
-  
+
   /* below here defined by x86 hardware */
   uint32_t tf_err;
   uintptr_t tf_eip;
@@ -597,7 +597,7 @@ struct Segdesc gdt[NCPU + 5] = {
 };
 
 struct Pseudodesc gdt_pd = {
-	sizeof(gdt) - 1, (unsigned long) gdt
+    sizeof(gdt) - 1, (unsigned long) gdt
 };
 
 enum {
@@ -609,30 +609,30 @@ enum {
 };
 
 struct Env {
-  struct Trapframe env_tf;	// Saved registers
-  struct Env *env_link;		// Next free Env
-  envid_t env_id;			// Unique environment identifier
-  envid_t env_parent_id;	// env_id of this env's parent
-  enum EnvType env_type;	// Indicates special system environments
-  unsigned env_status;		// Status of the environment
-  uint32_t env_runs;		// Number of times environment has run
-  int env_cpunum;			// The CPU that the env is running on
+  struct Trapframe env_tf;    // Saved registers
+  struct Env *env_link;        // Next free Env
+  envid_t env_id;            // Unique environment identifier
+  envid_t env_parent_id;    // env_id of this env's parent
+  enum EnvType env_type;    // Indicates special system environments
+  unsigned env_status;        // Status of the environment
+  uint32_t env_runs;        // Number of times environment has run
+  int env_cpunum;            // The CPU that the env is running on
 
   // Address space
-  pde_t *env_pgdir;		    // Kernel virtual address of page dir
+  pde_t *env_pgdir;            // Kernel virtual address of page dir
 
   // Exception handling
-  void *env_pgfault_upcall;	// Page fault upcall entry point
+  void *env_pgfault_upcall;    // Page fault upcall entry point
 
   // Lab 4 IPC
-  bool env_ipc_recving;		// Env is blocked receiving
-  void *env_ipc_dstva;		// VA at which to map received page
-  uint32_t env_ipc_value;	// Data value sent to us
-  envid_t env_ipc_from;		// envid of the sender
-  int env_ipc_perm;		    // Perm of page mapping received
+  bool env_ipc_recving;        // Env is blocked receiving
+  void *env_ipc_dstva;        // VA at which to map received page
+  uint32_t env_ipc_value;    // Data value sent to us
+  envid_t env_ipc_from;        // envid of the sender
+  int env_ipc_perm;            // Perm of page mapping received
 };
 
-struct Env *envs = NULL;		  // All environments
+struct Env *envs = NULL;          // All environments
 struct Env *curenv = NULL;        // Current environment
 static struct Env *env_free_list; // Free environment list
 
@@ -651,35 +651,14 @@ void env_init(void) {
   env_init_percpu();
 }
 
-
-// Initialize the kernel virtual memory layout for environment e.
-// Allocate a page directory, set e->env_pgdir accordingly,
-// and initialize the kernel portion of the new environment's address space.
-// Do NOT (yet) map anything into the user portion
-// of the environment's virtual address space.
-static int env_setup_vm(struct Env *e) {
-  int i;
-  struct PageInfo *p = NULL;
-
-  // Allocate a page for the page directory
-  if (!(p = page_alloc(ALLOC_ZERO))) {
-    return -E_NO_MEM;
+void env_create(uint8_t *binary, enum EnvType type) {
+  struct Env *e;
+  if (env_alloc(&e, 0) < 0) {
+    panic("env_create: env_alloc failed");
   }
-
-  // Now, set e->env_pgdir and initialize the page directory.
-  p->pp_ref++;
-  e->env_pgdir = (pde_t *)page2kva(p);
-  for (i = PDX(UTOP); i < NPDENTRIES; i++) {
-    e->env_pgdir[i] = kern_pgdir[i];
-  }
-
-  // UVPT maps the env's own page table read-only.
-  // Permissions: kernel R, user R
-  e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_P | PTE_U;
-
-  return 0;
+  load_icode(e ,binary);
+  e->env_type = type;
 }
-
 
 int env_alloc(struct Env **newenv_store, envid_t parent_id) {
   int32_t generation;
@@ -739,6 +718,34 @@ int env_alloc(struct Env **newenv_store, envid_t parent_id) {
   return 0;
 }
 
+// Initialize the kernel virtual memory layout for environment e.
+// Allocate a page directory, set e->env_pgdir accordingly,
+// and initialize the kernel portion of the new environment&#39;s address space.
+// Do NOT (yet) map anything into the user portion
+// of the environment&#39;s virtual address space.
+static int env_setup_vm(struct Env *e) {
+  int i;
+  struct PageInfo *p = NULL;
+
+  // Allocate a page for the page directory
+  if (!(p = page_alloc(ALLOC_ZERO))) {
+    return -E_NO_MEM;
+  }
+
+  // Now, set e->env_pgdir and initialize the page directory.
+  p->pp_ref++;
+  e->env_pgdir = (pde_t *)page2kva(p);
+  for (i = PDX(UTOP); i < NPDENTRIES; i++) {
+    e->env_pgdir[i] = kern_pgdir[i];
+  }
+
+  // UVPT maps the env&#39;s own page table read-only.
+  // Permissions: kernel R, user R
+  e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_P | PTE_U;
+
+  return 0;
+}
+
 static envid_t sys_exofork(void) {
   struct Env *newenv;
 
@@ -773,7 +780,7 @@ static void load_icode(struct Env *e, uint8_t *binary, size_t size) {
   ph = (struct Proghdr *)((uint8_t *)PROGHDR + PROGHDR->e_phoff);
   eph = ph + PROGHDR->e_phnum;
   lcr3(PADDR(e->env_pgdir));
-  
+
   for (; ph < eph; ph++) {
     if (ph->p_type == ELF_PROG_LOAD) {
       region_alloc(e, (void*)ph->p_va, ph->p_memsz);
@@ -825,13 +832,41 @@ void env_run(struct Env *e) {
 
 void env_pop_tf(struct Trapframe *tf) {
   asm volatile(
-    "\tmovl %0, %%esp\n"
-    "\tpopal\n"
-    "\tpopl %%es\n"
-    "\tpopl %%ds\n"
-    "\taddl $0x8, %%esp\n" // skip tf_trapno and tf_errcode
-    "\tiret\n"
+    "movl   %0, %%esp   \n\t"
+    "popal              \n\t"
+    "popl   %%es        \n\t"
+    "popl   %%ds        \n\t"
+    "addl   $0x8, %%esp \n\t" // skip tf_trapno and tf_errcode
+    "iret               \n"
     : : "g" (tf) : "memory");
   panic("iret failed");  // mostly to placate the compiler
+}
+```
+
+## (8) lib/syscall.c
+
+```c
+static inline int32_t syscall(
+    int num, int check, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5) {
+  uint32_t ret;
+
+  asm volatile(
+      "int %1    \n"
+      : "=a" (ret)          // mov  num, %eax
+      :  "i" (T_SYSCALL)    // mov   a1, %edx
+         "a"                // mov   a2, %ecx
+         "d"                // mov   a3, ebx
+         "c"                // mov   a4, edi
+         "b"                // mov   a5, esi
+         "D"                // int   T_SYSCALL
+         "S"                // mov %eax, ret
+       : "cc", "memory");
+  )
+
+  if (check && ret > 0) {
+    panic("syscall returned an error");
+  }
+
+  return ret;
 }
 ```
