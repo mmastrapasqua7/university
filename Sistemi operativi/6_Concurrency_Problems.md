@@ -78,3 +78,21 @@ cons:
   - solution: add a random delay before looping back (like ethernet 802.1)
 
 ##### Preventing mutual exclusion
+
+Instead of using lock, we can use hardware instructions used by locks to update datas, like we can repeatedly try to update a value with a compare_and_swap approach.
+
+#### Prevention of deadlock via scheduling (deadlock avoidance)
+
+If 2 thread have to access a data structure using a common set of locks, we can tell the scheduler to not run these 2 threads in parallel but in sequence, so as long as these 2 threads never run in parallel, no deadlock can occur.
+
+cons:
+
+- loose of performance: no more pure concurrency
+
+- impracticable
+
+- is not widely used
+
+#### Detection and recovery
+
+A deadlock detector runs periodically, building resource graph and checking it for cycles. In the event of a cicle, the detector restart the system. This approach is more practicable as long as deadlocks are very rare.
