@@ -44,7 +44,7 @@ A disk can be exactly in 2 states:
 
 #### RAID 0 (striping)
 
-the array if blocks are spread across the disks in a round-robin fashion
+the array of blocks are spread across the disks in a round-robin fashion
 
 - **CHUNK SIZE**: the number of blocks on each disk before moving to the next
   

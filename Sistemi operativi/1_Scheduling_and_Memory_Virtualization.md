@@ -98,11 +98,11 @@ MLFQ approximates the SJF.
 
 ##### Rules:
 
+###### Static Behavior Rules
+
 - **(1) if Priority(A) > Priority(B), A runs, B doesn't**
 
 - **(2) if Priority(A) = Priority(B), A and B run in RR using the time slice of the given queue**
-  
-  If a job does many IO operations (interactive) it is kept on the high priority queue. If the job uses the CPU intensively it is moved down to the low priority queue.
   
   Cons:
   
@@ -112,21 +112,23 @@ MLFQ approximates the SJF.
   
   The scheduler assumes that every job entering the system is a short job, thus giving it the high priority, so it runs quickly and then it completes.
 
+- **(5) after some period S, move all the jobs in the system to the topmost queue (BOOST)**
+  
+  <u>Solves 2 problems of rule 3, 4a and 4b in 1 shot: lowest priority job, starvation and behavior-change of job. A user can still gaming the scheduler</u>
+
+###### Dynamic Behavior Rules
+
 - **(4a) If a job uses up an entire time slice while running, its priority is reduced**
 
 - **(4b) If a jobs gives up the CPU before the time slice is up, it stays at the same priority level**
   
   Cons:
   
-  - STARVATION: if there are too many interactive jobs, they will consume all the CPU time and long-running CPU-intensive jobs will NEVER receive any CPU time
+  - STARVATION: if there are too many interactive jobs, they will consume all the CPU time and long-running CPU-intensive jobs will NEVER receive any CPU time (<u>solved by rule 5</u>)
   
-  - GAMING THE SCHEDULER: A smart user can program the job to issue an IO operation, thus relinquishing the CPU before its time slice is done. This type of job could monopolize the CPU.
+  - GAMING THE SCHEDULER: A smart user can program the job to issue an IO operation, thus relinquishing the CPU before its time slice is done. This type of job could monopolize the CPU (<u>solved by rule 4 definitive</u>)
   
-  - If a job changes its behavior over time, so a CPU-intensive job can transition to interactive, but the scheduler doesn't give a fuck and keeps it in the lowest queue.
-
-- **(5) after some period S, move all the jobs in the system to the topmost queue (BOOST)**
-  
-  Solves 2 problem in 1 shot: starvation and behavior-change of job. A user can still gaming the scheduler
+  - If a job changes its behavior over time, so a CPU-intensive job can transition to interactive, but the scheduler doesn't give a fuck and keeps it in the lowest queue (<u>solved by rule 5</u>)
 
 - **(4 definitive) once a job uses up its time allotment at a given level, REGARDLESS of how many times it has given up the CPU, its priority is reduced**
   
@@ -166,17 +168,17 @@ we divide the memory in logical segments:
 
 3. stack segment
 
-Instead of having one base bound pair per process, we have one base bound pair per logical segment. Esistono diversi approcci:
+Instead of having one base bound pair per process, we have one base bound pair per logical segment. 2 approaches:
 
-- **esplicito**
+- **explicit**
   
-  Esempio, un indirizzo di 16 bit viene sezionato in top-2 bit e low-14 bit, dove i primi due sono il **segment selector**, cioe' selezionano il segmento (code, heap, stack).
+  i.e., a 16 bit address is divided in top-2 bit and low-14 bit, where the top 2 bits are used as **segment selector**, so they select the segment (code, heap, stack).
 
-- **implicito**
+- **implicit**
   
-  nel caso degli instruction fetch, si riferisce al segmento code, se la base e' nello stack e' nello stack.
+  i.e., in case of instruction fetch, the address resides in the code segment. When the stack or break pointer is used as base, the address resides in the stack segment. Any other address is in the heap segment
 
-Cosa serve salvare nei registri segmento:
+What we need to save inside segment registers:
 
 - segment id (code = 00, heap = 01, stack = 11)
 
@@ -196,7 +198,7 @@ pros:
 
 cons:
 
-- malloc() must check the size of the segment to accomplish the request. It there isn't enough space, it must grow the segment, non a trivial task
+- malloc() must check the size of the segment to accomplish the request. If there isn't enough space, it must grow the segment, non a trivial task
 
 - **external fragmentation**: different sizes for every segment
 
@@ -230,17 +232,17 @@ ATTENZIONE: CASO INTEL (valid e present bit sotto un unico bit)
 
 esempio:
 
-1. read1:
+1. instruction fetch:
    
    1. virtual_addr = VPN | OFFSET
    
    2. pte_addr = pg_table_base_register + (VPN * sizeof(PTE))
    
-   3. phys_addr = read_pfn(pte_addr) + OFFSET (**FIRST READ**)
-
-2. read2:
+   3. pfn = read_pfn(pte_addr) (**FIRST READ**)
    
-   1. instruction = read(phys_addr) (**SECOND READ**)
+   4. phys_addr = pfn | OFFSET
+   
+   5. instruction = read_instr(phys_addr) (**SECOND READ**)
 
 pros:
 
@@ -276,7 +278,7 @@ cons:
 
 - **external fragmentation**: since we have page tables of arbitrary size and no more fixed-size page tables, finding free space for them is difficult.
 
-- sparsely-used memory waste pable table space
+- sparsely-used memory waste page table space
 
 ### Multi-level Page Tables (Page Directory Tables)
 

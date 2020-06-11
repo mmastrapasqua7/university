@@ -48,7 +48,7 @@ bootstack:
 bootstacktop:
 
 entry:
-  movl   $(RELOC(entry_pgdir)), %eax
+  movl   $(RELOC(entry_pgdir)), %eax ; reloc entry_pgdir to lower address too
   movl   %eax, %cr3
 
   movl   %cr0, %eax
@@ -217,12 +217,12 @@ struct PageInfo *page_alloc(int alloc_flags) {
   }
 
   struct PageInfo *allocated_page = page_free_list;
-  allocated_page->pp_link = NULL;
   if (alloc_flags & ALLOC_ZERO) {
     memset(page2kva(page_free_list), 0, PGSIZE);
   }
 
   page_free_list = page_free_list->pp_link;
+  allocated_page->pp_link = NULL;
   return allocated_page;
 }
 
@@ -384,18 +384,16 @@ void trap_init(void) {
 }
 
 void trap_init_percpu() {
-  thiscpu->cpu_ts.ts_esp0 = KSTACKTOP - cpunum() * (KSTKSIZE + KSTKGAP);
-  ts->cpu_ts.ts_ss0 = GD_KD;
+  ts.ts_esp0 = KSTACKTOP;
+  ts.ts_ss0 = GD_KD;
 
   // Initialize the TSS slot of the gdt.
-  gdt[(GD_TSS0 >> 3) + cpunum()] =
-    SEG16(STS_T32A, (uint32_t) (&thiscpu->cpu_ts), sizeof(struct Taskstate), 0);
-
-  gdt[(GD_TSS0 >> 3) + cpunum()].sd_s = 0;
+  gdt[GD_TSS0 >> 3] = SEG16(STS_T32A, (uint32_t) (&ts), sizeof(struct Taskstate), 0);
+  gdt[GD_TSS0 >> 3].sd_s = 0;
 
   // Load the TSS selector (like other segment selectors, the
   // bottom three bits are special; we leave them 0)
-  ltr(GD_TSS0 + (cpunum() << 3));
+  ltr(GD_TSS0);
 
   // Load the IDT
   lidt(&idt_pd);
@@ -403,18 +401,27 @@ void trap_init_percpu() {
 
 void trap(struct Trapframe *tf) {
   // where 0x11 = USER MODE
-  if ((tf->tf_cs & 0x11) == 0x11) { // if trapped from user mode
+  if ((tf->tf_cs & 0x11) == 0x11) {
+    // if trapped from user mode
     assert(curenv);
-    curenv->env_tf = *tf;
+    curenv->env_tf = *tf; // copy by value, data still on the stack
     tf = &(curenv->env_tf);
   }
+
   trap_dispatch(tf);
+
+  // if we arrive there, than no other environment was scheduled
+  if (curenv != NULL && curenv->env_status == ENV_RUNNING) {
+    env_run(curenv);
+  } else {
+    sched_yield();  
+  }
 }
 
 static void trap_dispatch(struct Trapframe *tf) {
-  if (tf->tf_trapno == IRQ_OFFSET + IRQ_TIMER) {
-    lapic_eoi();
-    sched_yield();
+  if (tf->tf_trapno == IRQ_OFFSET + IRQ_TIMER) { // if CLOCK INTERRUPT
+    lapic_eoi();   // INTERRUPT ACKNOWLEDGE
+    sched_yield(); // CALL THE SCHEDULER
     return;
   }
 
@@ -430,7 +437,8 @@ static void trap_dispatch(struct Trapframe *tf) {
       monitor(tf);
       break;
     case T_SYSCALL:
-      tf->tf_regs.reg_eax = syscall(
+      tf->tf_regs.reg_eax = syscall( // call syscall in kern/syscall.c
+        tf->tf_regs.reg_eax, // syscall number
         tf->tf_regs.reg_edx,
         tf->tf_regs.reg_ecx,
         tf->tf_regs.reg_ebx,
@@ -440,12 +448,6 @@ static void trap_dispatch(struct Trapframe *tf) {
     default:
       env_destroy(curenv);
       return;
-  }
-
-  if (curenv && curenv->env_status == ENV_RUNNING) {
-    env_run(curenv);
-  } else {
-    sched_yield();  
   }
 }
 ```
@@ -538,14 +540,14 @@ TRAPHANDLER_NOEC(irq14_entry, IRQ_OFFSET + 14);
 _alltraps:
   push %ds
   push %es
-  pushal
+  pusha ; push ax, bx, cx...
 
   mov $GD_KD, %ax
   mov %ax, %ds
   mov %ax, %es
 
-  pushl %esp
-  call trap
+  pushl %esp ; Trapframe *tf, is the pointer to a struct of Trapframe
+  call trap  ; needed by the trap() function
 
 .data
 .globl handlers
@@ -661,21 +663,19 @@ void env_create(uint8_t *binary, enum EnvType type) {
 }
 
 int env_alloc(struct Env **newenv_store, envid_t parent_id) {
-  int32_t generation;
-  int r;
-  struct Env *e;
-
-  if (!(e = env_free_list)) {
+  struct Env *e = env_free_list;
+  if (e == NULL) {
     return -E_NO_FREE_ENV;
   }
 
   // Allocate and set up the page directory for this environment.
-  if ((r = env_setup_vm(e)) < 0) {
-    return r;
+  int rc = env_setup_vm(e);
+  if (rc < 0) {
+    return r; // error
   }
 
   // Generate an env_id for this environment.
-  generation = (e->env_id + (1 << ENVGENSHIFT)) & ~(NENV - 1);
+  int32_t generation = (e->env_id + (1 << ENVGENSHIFT)) & ~(NENV - 1);
   if (generation <= 0) {
     generation = 1 << ENVGENSHIFT;
   }
@@ -720,26 +720,23 @@ int env_alloc(struct Env **newenv_store, envid_t parent_id) {
 
 // Initialize the kernel virtual memory layout for environment e.
 // Allocate a page directory, set e->env_pgdir accordingly,
-// and initialize the kernel portion of the new environment&#39;s address space.
+// and initialize the kernel portion of the new environment's address space.
 // Do NOT (yet) map anything into the user portion
-// of the environment&#39;s virtual address space.
+// of the environment's virtual address space.
 static int env_setup_vm(struct Env *e) {
-  int i;
-  struct PageInfo *p = NULL;
-
-  // Allocate a page for the page directory
-  if (!(p = page_alloc(ALLOC_ZERO))) {
+  struct PageInfo *p = page_alloc(ALLOC_ZERO);
+  if (p == NULL) {
     return -E_NO_MEM;
   }
 
   // Now, set e->env_pgdir and initialize the page directory.
   p->pp_ref++;
   e->env_pgdir = (pde_t *)page2kva(p);
-  for (i = PDX(UTOP); i < NPDENTRIES; i++) {
+  for (int i = PDX(UTOP); i < NPDENTRIES; i++) {
     e->env_pgdir[i] = kern_pgdir[i];
   }
 
-  // UVPT maps the env&#39;s own page table read-only.
+  // UVPT maps the env's own page table read-only.
   // Permissions: kernel R, user R
   e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_P | PTE_U;
 
@@ -795,17 +792,16 @@ static void load_icode(struct Env *e, uint8_t *binary, size_t size) {
 }
 
 void sched_yield() {
-  struct Env *idle;
-  int i, k;
+  int i;
   if (thiscpu->cpu_env == NULL) {
     i = 0;
   } else {
     i = ENVX(thiscpu->cpu_env->env_id) + 1;
   }
 
-  for (k = 0; k < NENV; k++) {
+  for (int k = 0; k < NENV; k++) {
     if (envs[i].env_status == ENV_RUNNABLE) {
-      env_run(&envs[i]);
+      env_run(&envs[i]); // context switch from curenv to envs[i]
     }
     i = (i + 1) % NENV;
   }
@@ -821,9 +817,10 @@ void env_run(struct Env *e) {
     if (curenv && curenv->env_status == ENV_RUNNING) {
       curenv->env_status = ENV_RUNNABLE;
     }
-    curenv = e;
+
     e->env_status = ENV_RUNNING;
     e->env_runs += 1;
+    curenv = e;
     lcr3(e->env_cr3);    
   }
 
@@ -837,7 +834,7 @@ void env_pop_tf(struct Trapframe *tf) {
     "popl   %%es        \n\t"
     "popl   %%ds        \n\t"
     "addl   $0x8, %%esp \n\t" // skip tf_trapno and tf_errcode
-    "iret               \n"
+    "iret               \n"   // return from interrupt, KERNEL_MODE -> USER_MODE
     : : "g" (tf) : "memory");
   panic("iret failed");  // mostly to placate the compiler
 }

@@ -52,7 +52,7 @@ can orchestrate the transfers between the RAM and the DISK **directly**, without
 
 - I/O instructions in the instruction set of the CPU **privileged**
 
-- memory-mapped i/O
+- memory-mapped I/O
   
   if we issue load/store (RAM instruction) at a certain address, the hardwaire will automatically redirect those instruction to some mapped device, thus making little holes in the main memory
 

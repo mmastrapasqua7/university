@@ -42,7 +42,7 @@ The **SWAP SPACE** is a reserved space on disk where the OS swap pages from memo
 
 - INVALID: Terminate the offending process.
 
-**PAGE REPLACEMENT POLICY** when the memory is full, the OS page out one or more pages to make room fro new pages. This action is called **REPLACE**.
+**PAGE REPLACEMENT POLICY** when the memory is full, the OS page out one or more pages to make room for new pages. This action is called **REPLACE**.
 
 example: PAGE FAULT
 
@@ -54,7 +54,7 @@ example: PAGE FAULT
       
       2. now, with a free page in memory, OS issues the I/O request to read that page from **swap space** to **ram**.
       
-      3. the OS updates the page table (PRESENT = TRUE, PFN = PFN of free page found in PTE)
+      3. the OS updates the page table (PRESENT = 1, PFN = PFN of free page found in PTE)
       
       4. **retries the instruction**
 

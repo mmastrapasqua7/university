@@ -16,7 +16,7 @@
 
 ### Hard Links
 
-simply creates **another name in the directory** (**DOES NOT ALLOCATE ANY NEW FILE**) but refers to **the same inode number** of the file hardlinked. The file, so the content, is not copied. It's simply a second human-readable name for the same underlying content. ```link()```
+simply creates **another name in the directory** (**DOES NOT ALLOCATE ANY NEW FILE NOT INODE**) but refers to **the same inode number** of the file hardlinked. The file, so the content, is not copied. It's simply a second human-readable name for the same inode, thus underlying content. ```link()```
 
 #### Facts
 

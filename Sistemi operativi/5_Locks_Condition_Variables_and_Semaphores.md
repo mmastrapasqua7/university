@@ -29,11 +29,11 @@ If another thread does hold the lock, the thread trying to grab the lock **wil n
 
 #### Metrics:
 
-- CORRECTNESS: does the lock provide mutual exclusion?
+- **CORRECTNESS**: does the lock provide mutual exclusion?
 
-- FAIRNESS: can you guarantee that a waiting thread will ever enter the critical section?
+- **FAIRNESS**: can you guarantee that a waiting thread will ever enter the critical section?
 
-- PERFORMANCE: what are the costs of using the lock?
+- **PERFORMANCE**: what are the costs of using the lock?
 
 #### Building the locks: SPIN-WAIT LOCKS
 
@@ -41,7 +41,7 @@ If another thread does hold the lock, the thread trying to grab the lock **wil n
 
 ```c
 void init(lock_t *mutex) {
-  mutex->flag = 1;
+  mutex->flag = 0;
 }
 
 void lock(lock_t *mutex) {
@@ -201,6 +201,8 @@ void unlock(lock_t *lock) {
 ##### 1st: yield()
 
 it simply gives up the CPU without spinning
+
+- CORRECT
 
 - NOT FAIR: can starve
 
@@ -366,8 +368,6 @@ int sem_post(sem_t *s) {
   // increment the value of semaphore s by 1
   // if there are one or more threads waiting, wake one from the queue
 }
-
-
 ```
 
 #### Semaphore for ordering
@@ -382,7 +382,7 @@ void parent() {
   sem_init(&s, 0, 0);
   pthread_t c;
   pthread_create(&c, NULL, child, NULL);
-  
+
   sem_wait(&s) // waiting the child to finish
 
   printf("child finished")  
@@ -421,7 +421,7 @@ void *producer(void *arg) {
 
 void *consumer(void *arg) {
   int tmp = 0;
-  
+
   while (tmp != -1) {
     sem_wait(&full);
     tmp = get();
@@ -450,7 +450,7 @@ void *producer(void *arg) {
 
 void *consumer(void *arg) {
   int tmp = 0;
-  
+
   while (tmp != -1) {
     sem_wait(&full);
     sem_wait(&mutex);

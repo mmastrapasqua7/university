@@ -68,4 +68,4 @@ is a piece of code that accesses a shared variable and must not be executed by m
 
 ### Mutual exclusion
 
-a guarantee that if one thread is ecevuting within the critical section, the other will be prevented from doing so
+a guarantee that if one thread is executing within the critical section, the other will be prevented from doing so

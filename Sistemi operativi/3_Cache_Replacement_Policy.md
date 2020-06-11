@@ -22,8 +22,6 @@ $$
 AMAT = T_M + (P_{miss} * T_D)
 $$
 
-
-
 #### Hitrate
 
 $$
