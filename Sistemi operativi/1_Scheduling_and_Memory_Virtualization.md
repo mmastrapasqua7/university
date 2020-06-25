@@ -4,7 +4,7 @@
 
 #### Turnaround Time
 
-The time at witch the job completes minus the time at which the job arrived in the system. Is a **performance** metric.
+The time at which the job completes minus the time at which the job arrived in the system. Is a **performance** metric.
 
 $$
 T_{turnaround} = T_{completion} - T_{arrival}
@@ -32,7 +32,7 @@ $$
 
 ### Algorithms
 
-#### FIFO (First In First Out / First Come First Served)
+#### FIFO / FCFS (First In First Out / First Come First Served)
 
 Pros:
 
@@ -64,7 +64,7 @@ Cons:
 
 #### STCF (Shortest Time-to-Complete First)
 
-SJF + preemption
+SJF **+ preemption**
 
 Pros:
 
@@ -114,7 +114,7 @@ MLFQ approximates the SJF.
 
 - **(5) after some period S, move all the jobs in the system to the topmost queue (BOOST)**
   
-  <u>Solves 2 problems of rule 3, 4a and 4b in 1 shot: lowest priority job, starvation and behavior-change of job. A user can still gaming the scheduler</u>
+  <u>Solves 3 problems of rule 2, 4a and 4b in 1 shot: lowest priority job, starvation and behavior-change of job. A user can still gaming the scheduler</u>
 
 ###### Dynamic Behavior Rules
 

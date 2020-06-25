@@ -161,21 +161,21 @@ same as above
 
 - NOT FAIR
 
-- NOT PERFORMANT but has less memory writes
+- NOT PERFORMANT but has **less memory writes**
 
 ##### 5th approach: fetch-and-add
 
 ```c
+typedef lock_t {
+  int ticket;
+  int turn;
+}
+
 int fetch_and_add(int *ptr) {
   int old_value = *ptr;
   *ptr = old_value + 1;
 
   return old_value;
-}
-
-typedef lock_t {
-  int ticket;
-  int turn;
 }
 
 void lock(lock_t *lock) {
@@ -194,7 +194,7 @@ void unlock(lock_t *lock) {
 
 - FAIR: it ensures progress between threads. Every thread that want to acquire the lock gets a ticket, and they wait until it is its turn.
 
-- NOT PERFORMAN but has less memory writes
+- NOT PERFORMAN but has **less memory writes**
 
 #### Building the locks: NO MORE SPIN-WAIT
 
@@ -204,7 +204,7 @@ it simply gives up the CPU without spinning
 
 - CORRECT
 
-- NOT FAIR: can starve
+- NOT FAIR: can starve, lot of context switch
 
 - NOT PERFORMANT: context switch costs a lot
 
@@ -305,7 +305,7 @@ void *child() {
 
 - importance of the lock
   
-  without the lock, if the child checks the done variable, which is 0, but before putting itself on sleep, it is interrupted and parent runs, setting done to 1. Then, child runs and sleep forever.
+  without the lock, if the child checks the done variable, which is 0, but before putting itself on sleep, it is interrupted and parent runs, setting done to 1. Then, child runs and sleeps forever.
 
 ### Semaphores
 
@@ -360,13 +360,12 @@ sem_post(sem_t *s) {
 
 ```c
 int sem_wait(semt_t *s) {
-  // decrement the value of semaphore s by 1
-  // wait if value of semaphore s is negative
+  // wait value to be 1
+  // set value to 0
 }
 
 int sem_post(sem_t *s) {
-  // increment the value of semaphore s by 1
-  // if there are one or more threads waiting, wake one from the queue
+  // set value to 1
 }
 ```
 
@@ -504,3 +503,45 @@ void rwlock_release_writelock(rwlock_t *rw) {
 ```
 
 first reader acquires the lock. In this case, the reader also acquires the write lock by calling sem_wait(rw->writelock). If a writer want to acquire the lock, it must wait until all readers are finished. In this case, the last reader will post the writelock, giving the writer the lock
+
+## Peterson's algorithm
+
+```c
+ //'' dichiarazione delle variabili globali comuni''
+ boolean flag[2] = {false, false};
+ int turno;
+
+Process CS1 {
+  while(true) {
+    flag[0] = true;
+    turno = 1;
+    while (flag[1] && turno == 1) {
+      ; // spin wait
+    }
+
+    // critical section 1
+    flag[0] = false;
+    // end critical section 1
+  }
+}
+
+Process CS2 {
+  while(true) {
+    flag[1] = true;
+    turno = 0;
+    while (flag[0] && turno == 0) {
+      ; // spin wait
+    }
+
+    // critical section 2
+    flag[1] = false;
+    // end critical section 2
+  }
+}
+```
+
+## x86 xchg
+
+```nasm
+
+```

@@ -58,7 +58,7 @@ can orchestrate the transfers between the RAM and the DISK **directly**, without
 
 x86 use both methods:
 
-- **in** and **out** instruction
+- **in** and **out** instruction (privileged)
 
 - memory mapped some chunk of memory
   

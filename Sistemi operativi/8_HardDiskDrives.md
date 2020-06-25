@@ -56,7 +56,7 @@ An hard drive is composed of a spindle, which moves 1 or more platter. Every pla
     
     - T_rotation = 4ms / 2 = 2ms
 
-- **Seek Time**
+- **Seek Time** (major cost of T_I/O)
   
   - acceleration
   

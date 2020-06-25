@@ -7,22 +7,58 @@
 ```nasm
 gdt:
   SEG_NULL
-  SEG(STA_X | STA_R, 0x00000000, 0xFFFFFFFF) ; code segment
-  SEG(STA_W, 0x00000000, 0xFFFFFFFF)         ; data segment
+  SEG(STA_X | STA_R, 0x00000000, 0xFFFFFFFF) ; code segment descriptor
+  SEG(STA_W, 0x00000000, 0xFFFFFFFF)         ; data segment descriptor
 gdtdesc:
   .word   0x17 # sizeof(gdt) - 1
   .long   gdt  # address gdt
 
+.set PROT_MODE_CSEG, 0x8  ; kernel code segment selector (1)
+.set PROT_MODE_DSEG, 0x10 ; kernel data segment selector (2)
+.set CR0_PE_ON,      0x1  ; protected mode enable flag
+
 start:
-  ...
-  lgdt    gdtdesc
+.code16                     ; Assemble for 16-bit mode
+  cli                       ; Disable interrupts
+  cld                       ; String operations increment
+
+  xorw    %ax, %ax          ; NULL segment selector
+  movw    %ax, %ds          ; Data segment selector -> SEG NULL
+  movw    %ax, %es          ; Extra segment selector -> SEG NULL
+  movw    %ax, %ss          ; Stack segment selector -> SEG NULL
+
+seta20.1:
+  inb     $0x64, %al        ; Wait for not busy
+  testb   $0x2, %al
+  jnz     seta20.1
+
+  movb    $0xd1, %al        ; 0xd1 -> port 0x64
+  outb    %al, $0x64
+
+seta20.2:
+  inb     $0x64, %al        ; Wait for not busy
+  testb   $0x2, %al
+  jnz     seta20.2
+
+  movb    $0xdf, %al        ; 0xdf -> port 0x60
+  outb    %al, $0x60
+
+  lgdt    gdtdesc           ; gdtr <- gdtdescriptor
   movl    %cr0, %eax
   orl     $CR0_PE_ON, %eax
-  movl    %eax, %cr0
-  ljmp    $PROT_MODE_CSEG, $protcseg ; Switches CPU into 32-bit mode.
+  movl    %eax, %cr0        ; cr0 <- protection enabled
+  ljmp    $PROT_MODE_CSEG, $protcseg ; Code segment selector -> cs
+    ; Switches CPU into 32-bit mode.
 
 protcseg:
-  ...
+.code32
+  movw    $PROT_MODE_DSEG, %ax    ; Data segment selector
+  movw    %ax, %ds                ; Data segment selector -> ds
+  movw    %ax, %es                ;
+  movw    %ax, %fs                ;
+  movw    %ax, %gs                ;
+  movw    %ax, %ss                ; Stack segment selector -> ss
+
   movl    $start, %esp ; %start = 0x7c00
   call    bootmain
 ```
@@ -30,9 +66,83 @@ protcseg:
 ## (3) cont'd: boot/main.c
 
 ```c
+#define SECTSIZE    512
+#define ELFHDR        ((struct Elf *) 0x10000) // scratch space
+
 void bootmain() {
-  ...
+  struct Proghdr *ph, *eph;
+
+  // read 1st page off disk
+  readseg((uint32_t) ELFHDR, SECTSIZE*8, 0); // read 4KB from disk
+
+  // is this a valid ELF?
+  if (ELFHDR->e_magic != ELF_MAGIC) {
+    goto bad;
+  }
+
+  // load each program segment (ignores ph flags)
+  ph = (struct Proghdr *) ((uint8_t *) ELFHDR + ELFHDR->e_phoff);
+  eph = ph + ELFHDR->e_phnum;
+  for (; ph < eph; ph++) {
+    // p_pa is the load address of this segment (as well
+    // as the physical address)
+    readseg(ph->p_pa, ph->p_memsz, ph->p_offset);
+  }
+
   ((void (*)(void)) (ELFHDR->e_entry))();
+}
+
+// Read 'count' bytes at 'offset' from kernel into physical address 'pa'.
+// Might copy more than asked
+void readseg(uint32_t pa, uint32_t count, uint32_t offset) {
+  uint32_t end_pa;
+
+  end_pa = pa + count;
+
+  // round down to sector boundary
+  pa &= ~(SECTSIZE - 1);
+
+  // translate from bytes to sectors, and kernel starts at sector 1
+  offset = (offset / SECTSIZE) + 1;
+
+  // If this is too slow, we could read lots of sectors at a time.
+  // We'd write more to memory than asked, but it doesn't matter --
+  // we load in increasing order.
+  while (pa < end_pa) {
+    // Since we haven't enabled paging yet and we're using
+    // an identity segment mapping (see boot.S), we can
+    // use physical addresses directly.  This won't be the
+    // case once JOS enables the MMU.
+    readsect((uint8_t*) pa, offset);
+    pa += SECTSIZE;
+    offset++;
+  }
+}
+
+void waitdisk(void) {
+  // wait for disk reaady
+  while ((inb(0x1F7) & 0xC0) != 0x40) {
+    /* do nothing */
+    ;
+  }
+}
+
+void readsect(void *dst, uint32_t offset) {
+  // wait for disk to be ready
+  waitdisk();
+
+  outb(0x1F2, 1);        // count = 1
+  outb(0x1F3, offset);
+  outb(0x1F4, offset >> 8);
+  outb(0x1F5, offset >> 16);
+  outb(0x1F6, (offset >> 24) | 0xE0);
+  outb(0x1F7, 0x20);    // cmd 0x20 - read sectors
+
+  // wait for disk to be ready
+  waitdisk();
+
+  // read a sector
+  insl(0x1F0, dst, SECTSIZE/4);
 }
 ```
 
@@ -47,6 +157,10 @@ bootstack:
   .globl bootstacktop
 bootstacktop:
 
+.globl _start
+_start = RELOC(entry)
+
+.globl entry
 entry:
   movl   $(RELOC(entry_pgdir)), %eax ; reloc entry_pgdir to lower address too
   movl   %eax, %cr3
@@ -93,7 +207,9 @@ pte_t entry_pgtable[NPTENTRIES] = {
 ```c
 void i386_init(void) {
   mem_init();
-  ...
+
+  env_init();  
+
   trap_init();
 }
 ```
@@ -212,15 +328,18 @@ void page_init(void) {
 }
 
 struct PageInfo *page_alloc(int alloc_flags) {
+  // alloc
   if (page_free_list == NULL) {
     return NULL;
   }
-
   struct PageInfo *allocated_page = page_free_list;
+
+  // clean
   if (alloc_flags & ALLOC_ZERO) {
     memset(page2kva(page_free_list), 0, PGSIZE);
   }
 
+  // update local structures and return
   page_free_list = page_free_list->pp_link;
   allocated_page->pp_link = NULL;
   return allocated_page;
@@ -268,7 +387,7 @@ int page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm) {
       pp->pp_ref += 1;
       tlb_invalidate(pgdir, va);
     } else { // present but same mapping, just change the permission
-      *pte = (*pte & 0xFFFFF000) | perm | PTE_P;
+      *pte = PTE_ADDR(*pte) | perm | PTE_P;
     }
   } else { // not present at all, add it
     *pte = page2pa(pp) | perm | PTE_P;
@@ -334,6 +453,7 @@ void* page2kva(struct PageInfo *pp) {
 struct Segdesc gdt[NCPU + 5] = {
   // 0x0 - unused (always faults -- for trapping NULL far pointers)
   SEG_NULL,
+
   // 0x8 - kernel code segment
   [GD_KT >> 3] = SEG(STA_X | STA_R, 0x0, 0xffffffff, 0),
 
@@ -653,16 +773,24 @@ void env_init(void) {
   env_init_percpu();
 }
 
-void env_create(uint8_t *binary, enum EnvType type) {
-  struct Env *e;
-  if (env_alloc(&e, 0) < 0) {
-    panic("env_create: env_alloc failed");
+static envid_t sys_exofork(void) {
+  struct Env *newenv;
+
+  int result = env_alloc(&newenv, thiscpu->cpu_env->env_id);
+  if (result) {
+    panic("sys_exofork: problems with env_alloc\n")
+    return result;
   }
-  load_icode(e ,binary);
-  e->env_type = type;
+
+  newenv->env_status = ENV_NOT_RUNNABLE;
+  newenv->env_tf = thiscpu->cpu_env->env_tf;
+  newenv->env_tf.tf_regs.reg_eax = 0;
+
+  return newenv->env_id;
 }
 
 int env_alloc(struct Env **newenv_store, envid_t parent_id) {
+  // Allocate env
   struct Env *e = env_free_list;
   if (e == NULL) {
     return -E_NO_FREE_ENV;
@@ -684,7 +812,7 @@ int env_alloc(struct Env **newenv_store, envid_t parent_id) {
   // Set the basic status variables.
   e->env_parent_id = parent_id;
   e->env_type = ENV_TYPE_USER;
-  e->env_status = ENV_RUNNABLE;
+  e->env_status = ENV_RUNNABLE; // ready
   e->env_runs = 0;
 
   // Clear out all the saved register state,
@@ -712,17 +840,24 @@ int env_alloc(struct Env **newenv_store, envid_t parent_id) {
   e->env_pgfault_upcall = 0;
   e->env_ipc_recving = 0;
 
+  // Update local structures and return
   env_free_list = e->env_link;
   *newenv_store = e;
-
   return 0;
 }
 
-// Initialize the kernel virtual memory layout for environment e.
-// Allocate a page directory, set e->env_pgdir accordingly,
+void env_create(uint8_t *binary, enum EnvType type) {
+  struct Env *e;
+  if (env_alloc(&e, 0) < 0) {
+    panic("env_create: env_alloc failed");
+  }
+  load_icode(e, binary);
+  e->env_type = type;
+}
+
+// 1. Initialize the kernel virtual memory layout for environment e.
+// 2. Allocate a page directory, set e->env_pgdir accordingly,
 // and initialize the kernel portion of the new environment's address space.
-// Do NOT (yet) map anything into the user portion
-// of the environment's virtual address space.
 static int env_setup_vm(struct Env *e) {
   struct PageInfo *p = page_alloc(ALLOC_ZERO);
   if (p == NULL) {
@@ -741,22 +876,6 @@ static int env_setup_vm(struct Env *e) {
   e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_P | PTE_U;
 
   return 0;
-}
-
-static envid_t sys_exofork(void) {
-  struct Env *newenv;
-
-  int result = env_alloc(&newenv, thiscpu->cpu_env->env_id);
-  if (result) {
-    panic("sys_exofork: problems with env_alloc\n")
-    return result;
-  }
-
-  newenv->env_status = ENV_NOT_RUNNABLE;
-  newenv->env_tf = thiscpu->cpu_env->env_tf;
-  newenv->env_tf.tf_regs.reg_eax = 0;
-
-  return newenv->env_id;
 }
 
 static void region_alloc(struct Env *e, void *va, size_t len) {

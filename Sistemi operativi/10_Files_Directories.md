@@ -16,7 +16,7 @@
 
 ### Hard Links
 
-simply creates **another name in the directory** (**DOES NOT ALLOCATE ANY NEW FILE NOT INODE**) but refers to **the same inode number** of the file hardlinked. The file, so the content, is not copied. It's simply a second human-readable name for the same inode, thus underlying content. ```link()```
+simply creates **another name in the directory** (**DOES NOT ALLOCATE ANY NEW FILE NOR INODE**) but refers to **the same inode number** of the file hardlinked. The file, so the content, is not copied. It's simply a second human-readable name for the same inode, thus underlying content. ```link()```
 
 #### Facts
 
@@ -28,7 +28,7 @@ cons:
 
 ### Symbolic Links
 
-**it is actually a new file,** but of different type. The size of this file depends on the name of the link. So, the actual data inside a file of type symbolic link is the string of the path to the linked file
+**it is actually a new file (new inode),** but of different type. The size of this file depends on the name of the link. So, the actual data inside a file of type symbolic link is the string of the path to the linked file
 
 ### Directory
 
@@ -44,7 +44,7 @@ suppose we have a disk
   
   - 64 blocks in this example
 
-- each block of size 4KB
+- each block of size 4KiB
 
 we use 56 blocks for **pure data blocks**.
 
