@@ -2,10 +2,10 @@
 
 ### Densita di probabilita
 
+I valori assunti dalla funzione di densita' di probabilita' possono essere tranquillamente maggiori di 1. Questo perche' non ha senso calcolare l'evento certo in $\R$, perche' e' infinitesimale, ovvero uguale a 0. Quello che conta e' l'area
+
 $$
 f_X : \R \mapsto \R^+ \\
-\text{} \\
-\forall B \subset \R \qquad P(X \in B) = \int_{B} f_X(x)dx \\
 \text{} \\
 \text{dove X e' una V.A. continua}
 $$
@@ -13,6 +13,8 @@ $$
 **proprieta**
 
 $$
+\forall B \subset \R \qquad P(X \in B) = \int_{B} f_X(x)dx \\
+\text{} \\
 1 = P(X \in \R) = \int_{-\infin}^{\infin}f_X(x) dx \\
 \text{} \\
 P(a \le X \le b) = \int_a^b f_X(x) dx \\
@@ -84,7 +86,7 @@ $$
 $$
 X \ge 0 \\
 \implies \\
-E(X) = \int_{0}^{\infin}1 - F_X(x) \space dx
+E(X) = \int_{0}^{\infin} (1 - F_X(x)) \space dx
 $$
 
 ### Varianza

@@ -1,22 +1,4 @@
-## Probabilita
-
-### Definizioni
-
-- **esito**: risultato di un esperimento
-
-- **spazio degli esiti (S)**: insieme che contiene tutti gli esiti possibili di un esperimento
-
-- **evento (E)**: sottoinsieme dello spazio degli esiti
-  
-  - **un evento E si dice verificato** quando l'esito dell'esperimento e' contenuto in E
-  
-  - **due eventi E e F si dicono disgiunti o mutualmente esclusivi** quando l'intersezione dei due insiemi e' l'insieme vuoto
-  
-  - **un evento E^c si dice complementare di E** quando contiene tutti gli esiti di S che non stanno in E
-    
-    - S^c e' l'insieme vuoto
-
-### Proprieta
+### Teoria degli insiemi (ripasso)
 
 $$
 E \lor F = F \lor E
@@ -52,37 +34,108 @@ $$
 (E \land F)^c = E^c \lor F^c
 $$
 
-### Assiomi
+# Probabilita'
 
-1. $$
-   0 \le P(E) \le 1
-   $$
+## Definizioni
 
-2. $$
-   P(S) = 1
-   $$
+- **Esito**: risultato di un esperimento
+  
+  $w \in \Omega$
 
-3. per ogni successione di **eventi mutualmente esclusivi E1, E2, ..., En**
-   
-   $$
-   P(\bigcup_{i=1}^{n} E_i) = \sum_{i=1}^{n} P(E_i)
-   $$
+- **Spazio degli esiti**: insieme che contiene tutti gli esiti possibili di un esperimento. Anche detto **evento certo**
+  
+  $\Omega$
 
-#### Proposizione 1
+- **Evento**: sottoinsieme dello spazio degli esiti
+  
+  $E \subset \Omega$
+  
+  - **un evento** $E$ **si dice verificato** quando l'esito dell'esperimento e' contenuto in $E$
+    
+    $E \text{ verificato} \iff w \in E \text{, dove } w \text{ e' l'esito dell'esperimento}$
+  
+  - **due eventi** $E$ **ed** $F$ **si dicono disgiunti o mutualmente esclusivi** quando l'intersezione dei due insiemi e' l'insieme vuoto
+    
+    $E \land F = \empty$
+  
+  - **un evento** $E^c$ **si dice complementare di** $E$ quando contiene tutti gli esiti di $\Omega$ che non stanno in $E$
+    
+    $\Omega^c = \empty$
+    
+    $x \in E^c \iff x \notin E$
 
-estensione dell'assioma 3 per ogni evento qualsiasi
+## Algebra degli eventi
+
+$$
+\Alpha = \{E_i \subset \Omega\}
+$$
+
+**proprieta**:
+
+1. $\Omega \in \Alpha$
+
+2. $\forall E \qquad E \subset \Alpha \implies E^c \subset \Alpha$
+
+3. $\forall E,F \qquad E \subset \Alpha \space \land \space F \subset \Alpha \implies E \lor F\subset \Alpha$
+
+## Assiomi di Kolmogorov
+
+$$
+P: \Alpha \mapsto [0, 1]
+$$
+
+1. $P(\Omega) = 1$
+
+2. $\forall E \in \Alpha \qquad 0 \le P(E) \le 1$
+
+3. $\forall E_1, E_2 \in \Alpha, \quad E_1 \land E_2 = \empty \implies P(E_1 \lor E_2) = P(E_1) + P(E_2)$
+
+### Proposizione 1
+
+se vale l'assioma 3, allora:
+
+$$
+\forall E_1, ..., E_n, \quad \forall i \ne j \space E_i \land E_j = \empty \implies 
+P(\bigcup_{i=1}^{n}E_i) = \sum_{i=1}^{n}P(E_i)
+$$
+
+### Proposizione 2
+
+estensione dell'assioma 3 per ogni evento qualsiasi, anche non disgiunto
 
 $$
 P(E \lor F) = P(E) + P(F) - P(E \land F)
 $$
 
-#### Proposizione 2
+### Proposizione 3
 
 $$
-P(E^c) = 1 - P(E)
+1 = P(\Omega) = P(E) + P(E^c)
 $$
 
-### Probabilita condizionata
+## Teoria classica della probabilita'
+
+$$
+P(E) = \frac{\text{\# casi favorevoli}}{\text{\# casi possibili}}
+$$
+
+## Spazi equiprobabili
+
+$$
+\forall w \in \Omega \qquad P(\{w\}) = p = \frac{1}{p} \\
+\implies \\
+P(\Omega) = P(\{1\}) + ... + P(\{n\}) = np
+$$
+
+$$
+\text{} \\
+\forall E \subset \Omega \qquad E = \{e_1, ..., e_k\} \qquad k \le n \\
+\implies \\
+E = \{e_1\} \lor ... \lor \{e_k\} \\
+P(E) = P(\{e_1\}) + ... + P(\{e_k\}) = kp = \frac{k}{n} = \frac{\#E}{n}
+$$
+
+## Probabilita condizionata
 
 #### Formula 1
 
@@ -100,7 +153,7 @@ $$
 F = \text{funziona} = 25/40 \\
 ND = \text{non difettoso} = 35/40 \\
 \text{} \\
-P(F|ND) = \frac{P(F \land ND)}{P(ND)} = \frac{25/40}{35/40} = \frac{25}{35} = \frac{5}{7} = 0.714 
+P(F|ND) = \frac{P(F \land ND)}{P(ND)} = \frac{25/40}{35/40} = \frac{25}{35} = \frac{5}{7} = 0.714
 $$
 
 #### Formula 2
@@ -144,7 +197,7 @@ P(I_1|H)P(H) + P(I_1|H^c)P(H^c) = \\
 = 0.4 * 0.3 + 0.2 * 0.7 = 0.12 + 0.14 = 0.26
 $$
 
-#### Formula 4
+#### Formula 4 o Teorema di Bayes
 
 Utile quando si vuole riconsiderare il proprio livello di convincimento / livello di confidenza su un fatto, alla luce di nuove informazioni
 
@@ -157,8 +210,8 @@ $$
 lo 0.5% della popolazione soffre di una malattia. Il tester per questa malattia sbaglia solo l'1% delle volte, sia in falsi positivi sia in falsi negativi. Presa una persona a caso dalla popolazione, se il test risulta positivo, qual e' la probabilita' che la persona sia **davvero** malata?
 
 $$
-E = \text{esito positivo, risultato: malato} = 0.99 \\
-M = \text{sei veramente malato} = 0.005 \\
+P(E|M) = \text{esito positivo, risultato: malato} = 0.99 \\
+P(M) = \text{sei veramente malato} = 0.005 \\
 \text{} \\
 P(M|E) =
 \frac{P(M \land E)}{P(E)} =
@@ -218,7 +271,7 @@ In questo esempio si vede chiaramente come l'ipotesi ```P(H) = 0.3``` viene riva
 
 ### Classificatore Naive Bayes
 
-L'ipotesi di sotto e' legata al teorema di Bayes, l'ingenuita' e' quella di poter sempre immaginare che gli attributi di un dataset siano tra loro indipendenti
+L'ipotesi di sotto e' legata al teorema di Bayes, l'ingenuita' e' quella di poter sempre immaginare che gli attributi di un dataset siano tra loro indipendenti. Mi semplifica i calcoli perche' dovro' andare a calcolare $m + n$ probabilita' invece che $mn$.
 
 $$
 Y = y_k \qquad \text{eventi possibili} \\
@@ -231,17 +284,17 @@ X_2 = x_2, ..., X_n = x_n \\
 \text{} \\
 P(Y = y_k | X_1 = x_1, ..., X_n = x_n) = ? \\
 \text{} \\
-\text{applico teorema di Bayes} \\
+\text{applico teorema di Bayes (mn numeratori)} \\
 \text{} \\
 = \frac{P(X_1 = x_1, ..., X_n = x_n | Y = y_k)P(Y = y_k)}{P(X_1 = x_1, ..., X_n = x_n)} = \\
 \text{} \\
-\text{applico l'ingenuita': attributi indipendenti} \\
+\text{applico l'ingenuita': attributi indipendenti per cui intersezione = prodotto (m + n numeratori)} \\
 \text{} \\
  = \frac{P(X_1 = x_1 | Y = y_k) * ... * P(X_n = x_n | Y = y_k)P(Y = y_k)}{P(X_1 = x_1, ..., X_n = x_n)} \propto \\
 \text{} \\
-\propto \prod_{i=1}^{n} P(X_1 = x_1 | Y = y_k)P(Y = y_k) \\
+\propto P(Y = y_k) \prod_{i=1}^{n} P(X_1 = x_1 | Y = y_k) \\
 \text{} \\
-k^* = \argmax_k \prod_{i=1}^{n} P(X_1 = x_1 | Y = y_k)P(Y = y_k)
+k^* = \argmax_k P(Y = y_k) \prod_{i=1}^{n} P(X_1 = x_1 | Y = y_k)
 $$
 
 Voglio il k che massimizza questa produttoria per usarlo in un classificatore a soglia

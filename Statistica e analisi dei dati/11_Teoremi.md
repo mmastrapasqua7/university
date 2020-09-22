@@ -1,6 +1,6 @@
 ## Teoremi
 
-### Teorema del limite centrale
+### Teorema centrale del limite
 
 Le V.A. sono indipendenti e identicamente distribuite, non sappiamo quale distribuzione, ma sappiamo che sono tutte uguali e indipendenti. Questa approssimazione diventa sempre piu' precisa all'aumentare degli addendi Xi.
 
@@ -13,9 +13,9 @@ X_1, X_2, ..., X_n \space \text{i.i.d.} \\
 \text{} \\
 \implies \\
 \text{} \\
-\sum_{i=1}^{n}X_i \sim N(n \mu, \sqrt{n} \sigma) \qquad \text{NORMALE} \\
+\sum_{i=1}^{n}X_i \approx \sim N(n \mu, \sqrt{n} \sigma) \qquad \text{NORMALE} \\
 \text{} \\
-Z \coloneqq \frac{\sum_{i=1}^{n} X_i - n \mu}{\sqrt{n} \sigma} \sim N(0, 1) \qquad \text{NORMALE STANDARDIZZATA}\\
+Z \coloneqq \frac{\sum_{i=1}^{n} X_i - n \mu}{\sqrt{n} \sigma} \approx \sim N(0, 1) \qquad \text{NORMALE STANDARD}\\
 \text{} \\
 P(Z \le x) \approx \Phi(x)
 $$
@@ -50,10 +50,7 @@ E' da preferirsi il caso binomiale perche' piu' precisa e non approssimata, ma a
 $$
 X_1, X_2, ..., X_n \sim B(p) \qquad \forall i \text{ + INDIPENDENZA} \\
 \implies \\
-X \coloneqq \sum_{i=1}^{n}X_i
-\text{} \\
-\text{} \\
-X \sim N(np, \sqrt{np(1 - p)})
+X \coloneqq \sum_{i=1}^{n}X_i \approx \sim N(np, \sqrt{np(1 - p)})
 \text{} \\
 \text{} \\
 X \sim B(n, p)
@@ -95,24 +92,15 @@ Se fossi partito da n-addendi binomiali invece che bernoulliani? Posso approssim
 $$
 X_1, X_2, ..., X_n \sim B(m, p) \qquad \forall i \\
 \text{} \\
-X \coloneqq \sum_{i=1}^{n} X_i \\
-\text{} \\
-X \sim B(nm, p)
+X \coloneqq \sum_{i=1}^{n} X_i \sim B(nm, p)
 $$
 
-$$
-
-
-$$
-
-#### V.A. normali + indipendenza =  normale
+#### V.A. normali + indipendenza =  normale (no approx)
 
 Se gli n-addendi sono normali, quello che ottengo non e' piu' un approssimazione, ma ottengo qualcosa di esatto, un'uguaglianza, a differenza del teorema centrale del limite che offre un'approssimazione
 
 $$
 X_1, X_2, ..., X_n \sim N(\mu, \sigma) \qquad \forall i \\
 \text{} \\
-X \coloneqq \sum_{i=1}^{n} X_i \\
-\text{} \\
-X \sim N(n\mu, \sqrt{n}\sigma)
+X \coloneqq \sum_{i=1}^{n} X_i \sim N(n\mu, \sqrt{n}\sigma)
 $$

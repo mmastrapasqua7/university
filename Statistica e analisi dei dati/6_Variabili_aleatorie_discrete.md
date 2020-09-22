@@ -3,13 +3,13 @@
 Quando non siamo interessati a un particolare esito ma a una quantita' determinata dall'esito di un esperimento, usiamo le **variabili aleatorie**. Siccome il valore di una V.A. e' determinato dall'esito dell'esperimento, possiamo assegnare delle probabilita' ai suoi valori.
 
 $$
-X: S \mapsto \R \\
+X: \Omega \mapsto \R \\
 \text{} \\
 P(X = x) = P(\{X = x\}) \\
 \text{} \\
-\{X = x\} = \{s \in S : X(s) = x\} \\
+\{X = x\} = \{w \in \Omega : X(w) = x\} \\
 \text{} \\
-1 = P(S) = P(\bigcup_{i=1}^{n}\{X = i\}) = \sum_{i=1}^{n} P(X = i)
+1 = P(\Omega) = P(\bigcup_{i=1}^{n}\{X = i\}) = \sum_{i=1}^{n} P(X = i)
 $$
 
 **esempio**:
@@ -33,25 +33,25 @@ I_A(x) \coloneqq \begin{cases}
 \end{cases}
 $$
 
-### Funzione di ripartizione
+### Funzione di ripartizione (distribuzione cumulativa)
 
 $$
 F_X : \R \mapsto [0, 1] \\
 \text{} \\
-F_X(x) \coloneqq P(X \le x)
-$$
-
-**proprieta**:
-
-$$
-P(X \le b) = P(X \le a) + P(a \lt X \le b) \\
+F_X(x) = P(X \le x) \\
 \text{} \\
-P(a \lt X \le b) = P(X \le b) - P(X \le a) = F(b) - F(a)
+\text{} \\
+\text{} \\
+\{X \le b\} = \{X \le a\} \lor \{a \lt X \le b\} \\
+\text{} \\
+F_X(b) = F_X(a) + P(a \lt X \le b) \\
+\text{} \\
+P(a \lt X \le b) = F_X(b) - F_X(a)
 $$
 
 ## V.A. Discrete
 
-Una V.A. si dice discreta se e solo se puo' assumere un'insieme numerabile di specificazioni
+Una V.A. si dice discreta se e solo se **puo' assumere un'insieme numerabile di specificazioni**, oppure un qualsiasi numero naturale (anche infiniti valori discreti)
 
 ### Funzione di massa di probabilita'
 
@@ -60,7 +60,15 @@ p_X : \R \mapsto [0, 1] \\
 \text{} \\
 p_X(x) = P(X = x) \\
 \text{} \\
+\text{} \\
+\text{} \\
 \sum_{i=1}^{n}p_X(x_i) = 1
+$$
+
+**osservazione**:
+
+$$
+X: \Omega \to \R \qquad p_X: \R \to [0, 1]
 $$
 
 ### Funzione di ripartizione
@@ -68,7 +76,11 @@ $$
 $$
 F_X : \R \mapsto [0, 1] \\
 \text{} \\
-F_X(x) = P(X \le x) = \sum_{a \le x} P(X = a) = \sum_{a \le x} p_X(a)
+F_X(x) = P(X \le x) = \sum_{a \le x} P(X = a) = \sum_{a \le x} p_X(a) \\
+\text{} \\
+\lim_{x \to \infin} F_X(x) = 1 \\
+\text{} \\
+P(X \le b) = F_X(b) = P(X \le a) + P(a \lt X \le b)
 $$
 
 **proprieta**
@@ -90,7 +102,25 @@ $$
 **proprieta**:
 
 $$
-E(aX + b) = aE(X) + b
+E(aX + b) = aE(X) + b \\
+\text{} \\
+E(I_A) = P(A)
+$$
+
+**proprieta 2**: **ERRORE MEDIO**
+
+Se approssimo la mia V.A. con il suo valore atteso, sono certo che sia un valore reale, perche' sara' il valore col minimo errore possibile.
+
+$$
+X \text{ v.a.}, \quad \mu \coloneqq E(X), \quad c \in \R \\
+\text{} \\
+E((X - c)^2) = Var(X) + (\mu - c)^2 \ge Var(X)
+$$
+
+**proprieta 3**:
+
+$$
+E(X - \mu) = E(X) - \mu = 0
 $$
 
 **esempio**:
@@ -116,13 +146,15 @@ $$
 ### Varianza
 
 $$
-Var(X) = \sigma_X^2 = E(X^2) - E(X)^2
+Var(X) = \sigma_X^2 = E((X - \mu)^2) = E(X^2) - E(X)^2
 $$
 
 **proprieta'**:
 
 $$
-Var(aX + b) = a^2 \space Var(X)
+Var(aX + b) = a^2 \space Var(X) \\
+\text{} \\
+Var(I_A) = P(A)P(A^c)
 $$
 
 **esempio**:
@@ -140,7 +172,7 @@ E(X)^2 = (\frac{7}{2})^2 = \frac{49}{4} \\
 \text{} \\
 Y = g(x) \coloneqq x^2 = X^2 \\
 \text{} \\
-E(X^2) = E(Y) = E(g(x)) = \sum_{i=1}^{6} x_i^2 \space p_Y(x_i^2) = \sum_{i=1}^{6} i^2 \frac{1}{6} = \frac{91}{6} \\
+E(X^2) = E(Y) = E(g(x)) = \sum_{i=1}^{6} x_i^2 \space p_X(x_i) = \sum_{i=1}^{6} i^2 \frac{1}{6} = \frac{91}{6} \\
 \text{} \\
 Var(X) = E(X^2) - E(X)^2 = \frac{91}{6} - \frac{49}{4} = \frac{35}{12} = 2.91
 $$
@@ -153,9 +185,9 @@ $$
 
 ## V.A. Discrete Multivariate
 
-Vettore di variabili aleatorie, coppie X Y
+Vettore di variabili aleatorie, coppie $(X, Y)$
 
-### Funzione di ripartizione congiunta
+### Funzione di ripartizione (distribuzione cumulativa) congiunta
 
 $$
 F_{X,Y}(x, y) = P(X \le x, Y \le y) \\
@@ -258,16 +290,24 @@ Var(X) = Var(\sum_{i=1}^{10} X_i) = \text{per indipendenza} = \\
 = \sum_{i=1}^{10} Var(X_i) = \sum_{i=1}^{10} \frac{35}{12} = 10 \space\frac{35}{12}
 $$
 
+**PROBLEMA DELLA VARIANZA**
+
+$$
+E(X + X) = E(2X) = 2E(X) = E(X) + E(X)\\
+\text{} \\
+Var(X + X) = Var(2X) = 4Var(X) \neq Var(X) + Var(X)
+$$
+
 ### Covarianza
 
 $$
-Cov(X, Y) = E((X - E(X))(Y - E(Y))) \\
-\text{} \\
-\text{oppure} \\
-\text{} \\
 \mu_X \coloneqq E(X) \\
 \mu_Y \coloneqq E(Y) \\
+\text{} \\
 Cov(X,Y) = E((X-\mu_X)(Y - \mu_Y)) \\
+\text{} \\
+Cov(X, Y) = E(XY) - E(X)E(Y) \\
+\text{} \\
 \text{} \\
 \text{} \\
 \text{se } X, Y \text{ sono V.A. indipendenti} \\
@@ -280,7 +320,7 @@ $$
 $$
 Cov(X,Y) = Cov(Y,X) \\
 \text{} \\
-Cov(aX, Y) = a * Cov(X,Y) \\
+Cov(aX, bY) = a * b * Cov(X,Y) \\
 \text{} \\
 Cov(X+b, Y) = Cov(X, Y) \\
 \text{} \\
@@ -293,8 +333,16 @@ $$
 
 ### Coefficiente di correlazione lineare
 
+Corregge il difetto della covarianza
+
 $$
 \rho_{X,Y} \in [-1, 1] \\
 \text{} \\
 \rho_{X,Y} = \frac{Cov(X, Y)}{\sigma_X \sigma_Y}
+$$
+
+**proprieta**:
+
+$$
+X \text{ e } Y \text{ indipendenti} \implies \rho_{X, Y} = 0
 $$

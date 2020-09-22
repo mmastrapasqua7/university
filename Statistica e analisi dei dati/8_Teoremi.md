@@ -1,8 +1,8 @@
 ## Teoremi
 
-La disuguaglianza di Markov e di Chebyshev permettono di limitare la probabilita di eventi rari che riguardano V.A. di cui si conosce poco, come la media (Markov) o la media e la deviazione standard (Chebyshev)
+La disuguaglianza di Markov e di Chebyshev permettono di limitare la probabilita di eventi rari che riguardano V.A. di cui si conosce poco, come il valore atteso (Markov) o valore atteso e deviazione standard (Chebyshev)
 
-### Disuguaglianza di Markov
+### Disuguaglianza di Markov (v.a. discrete e continue)
 
 $$
 X \ge 0 \implies \forall a \gt 0 \quad P(X \ge a) \le \frac{\mu}{a} \\
@@ -18,7 +18,7 @@ $$
 P(X \lt a) = 1 - P(X \ge a) \ge 1 - \frac{\mu}{a}
 $$
 
-### Disuguaglianza di Chebyshev
+### Disuguaglianza di Chebyshev (v.a. discrete e continue)
 
 $$
 \forall r > 0 \qquad P(|X - \mu| \ge r) \le \frac{\sigma^2}{r^2} \\
@@ -59,7 +59,7 @@ P(|X - 50| \ge 10) \le \frac{25}{10^2} = \frac{1}{4} \implies \\
 P(|X - 50| \le 10) \ge 1 - \frac{1}{4} = \frac{3}{4}
 $$
 
-### Legge debole dei grandi numeri
+### Legge debole
 
 Mostra come la media aritmetica di n-copie indipendenti di una V.A. tende al suo valore atteso, per n che tende a infinito:
 
