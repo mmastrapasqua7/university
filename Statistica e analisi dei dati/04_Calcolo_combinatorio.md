@@ -1,6 +1,6 @@
 # Calcolo combinaorio
 
-**PRINCIPIO FONDAMENTALE DEL CALCOLO COMBINATORIO**: se ci sono s1 modi per operare una scelta e, per ciascuno di essi, ci sono s2 modi per operare una seconda scelta e, per ciascuno di essi ci sono s3 modi per operare una terza scelta e così via fino a stst modi per operare la t-esima scelta, allora il numero delle sequenze di possibili scelte e' s1 \* s2 \* ... \* st
+**PRINCIPIO FONDAMENTALE DEL CALCOLO COMBINATORIO**: se ci sono $s_1$ modi per operare una scelta e, per ciascuno di essi, ci sono $s_2$ modi per operare una seconda scelta e, per ciascuno di essi ci sono $s_3$ modi per operare una terza scelta e così via fino a $s_t$ modi per operare la $t$-esima scelta, allora il numero delle sequenze di possibili scelte e' $s_1 * s_2 * ... * s_t$
 
 ## Permutazioni
 
@@ -13,7 +13,7 @@
 SOLUZIONE:
 
 $$
-n!
+p_n = n!
 $$
 
 **esempio**: ci sono 4 persone che si vogliono sedere su una panchina da 4 posti numerati. In quanti modi posso far sedere tutte e 4 le persone? 4!

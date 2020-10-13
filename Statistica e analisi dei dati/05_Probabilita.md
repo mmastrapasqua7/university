@@ -122,7 +122,7 @@ $$
 ## Spazi equiprobabili
 
 $$
-\forall w \in \Omega \qquad P(\{w\}) = p = \frac{1}{p} \\
+\forall w \in \Omega \qquad P(\{w\}) = p = \frac{1}{n} \\
 \implies \\
 P(\Omega) = P(\{1\}) + ... + P(\{n\}) = np
 $$
@@ -222,7 +222,7 @@ $$
 
 ### Formula di fattorizzazione
 
-Utile quando si vuole calcolare la probabilita di un evento E condizionando rispetto a quale si verifichi tra un gruppo di eventi accessori **F1, F2, ..., Fn mutualmente esclusivi che ricoprono S**
+Utile quando si vuole calcolare la probabilita di un evento E condizionando rispetto a quale si verifichi tra un gruppo di eventi accessori **F1, F2, ..., Fn mutualmente esclusivi che ricoprono $\Omega$**
 
 $$
 P(E) = \sum_{i=1}^{n} P(E \land F_i) = \sum_{i=1}^{n} P(E|F_i)P(F_i)
@@ -292,7 +292,7 @@ P(Y = y_k | X_1 = x_1, ..., X_n = x_n) = ? \\
 \text{} \\
  = \frac{P(X_1 = x_1 | Y = y_k) * ... * P(X_n = x_n | Y = y_k)P(Y = y_k)}{P(X_1 = x_1, ..., X_n = x_n)} \propto \\
 \text{} \\
-\propto P(Y = y_k) \prod_{i=1}^{n} P(X_1 = x_1 | Y = y_k) \\
+\propto P(Y = y_k) \prod_{i=1}^{n} P(X_i = x_i | Y = y_k) \\
 \text{} \\
 k^* = \argmax_k P(Y = y_k) \prod_{i=1}^{n} P(X_1 = x_1 | Y = y_k)
 $$

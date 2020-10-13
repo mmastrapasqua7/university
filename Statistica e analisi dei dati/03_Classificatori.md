@@ -2,8 +2,7 @@
 
 Immaginiamo di avere a disposizione un classificatore **binario**, costruito cioè per discriminare tra due classi che convenzionalmente indicheremo come **positiva** e **negativa**.
 
-A partire da un insieme di oggetti di cui è noto a priori l'esito della classificazione possiamo valutare la bontà di questo classificatore calcolando il numero di casi 
-(o la corrispondente frazione) che vengono classificati in modo errato. Notiamo però che ci sono due possibili modi di sbagliare la classificazione:
+A partire da un insieme di oggetti di cui è noto a priori l'esito della classificazione possiamo valutare la bontà di questo classificatore calcolando il numero di casi (o la corrispondente frazione) che vengono classificati in modo errato. Notiamo però che ci sono due possibili modi di sbagliare la classificazione:
 
 - un esempio positivo viene classificato come negativo, dando luogo a un cosiddetto **falso negativo**;
 - un esempio negativo viene classificato come positivo, e in questo caso si parla di **falso positivo**.
@@ -44,30 +43,30 @@ $$
 |:---------:|:------:|:------:|
 | **c.pos** | VP     | FP     |
 | **c.neg** | FN     | VN     |
-|           | **TN** | **TN** |
+|           | **TP** | **TN** |
 
-### Costante positivo (1, 1)
+### Costante positivo (1, 1) spec:0, sens:1
 
 |           | v.pos | v.neg |
 |:---------:|:-----:|:-----:|
 | **c.pos** | TP    | TN    |
 | **c.neg** | 0     | 0     |
 
-### Costante negativo (0, 0)
+### Costante negativo (0, 0) spec:1, sens:0
 
 |           | v.pos | v.neg |
 |:---------:|:-----:|:-----:|
 | **c.pos** | 0     | 0     |
 | **c.neg** | TP    | TN    |
 
-### Classificatore ideale (0, 1)
+### Classificatore ideale (0, 1) spec:1, sens:1
 
 |           | v.pos | v.neg |
 |:---------:|:-----:|:-----:|
 | **c.pos** | TP    | 0     |
 | **c.neg** | 0     | TN    |
 
-### Classificatore errato (1, 0)
+### Classificatore errato (1, 0) spec:0, sens:0
 
 |           | v.pos | v.neg |
 |:---------:|:-----:|:-----:|

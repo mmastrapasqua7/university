@@ -63,8 +63,8 @@ P(\text{auto nuova funziona per almeno 5 anni}) = \\
 = P(X > 5) = e^{-\lambda5} = e^{-0.5} \approx 0.61 \\
 \text{} \\
 P(\text{auto usata 7 anni funzioni per altri 5}) = \\
-= P(X > 12 | X > 7) = \text{per assenza di memoria} =  \\
-= P(X > 7) = e^{-\lambda 7} = e^{-0.7} \approx 0.50
+= P(X > 7 + 5 | X > 7) = \text{per assenza di memoria} =  \\
+= P(X > 5) = e^{-\lambda 5} = e^{-0.5} \approx ?
 $$
 
 #### PROPRIETA: Assenza di memoria
@@ -92,7 +92,7 @@ P(Y > x) = P(\forall i \space X_i > x) = P(\bigcap_{i=1}^{n} \{X_i > x\}) = \pro
 = \prod_{i=1}^{n} e^{-\lambda_i x}= e^{-\lambda x}
 $$
 
-**esempio**
+**esempio**:
 
 Se ho dei componenti in serie, e indico con $X_i$ il tempo di guasto del componente i-esimo, il fatto che questi componenti siano legati in serie ne basta uno per determinare l'intero guasto del sistema. $\min(X_i)$ = tempo di guasto del sistema. **Ogni componente $C_i$ e' indipendente uno dall'altro.**
 
@@ -108,7 +108,7 @@ $$
 
 ### Modello gaussiano (o normale)
 
-Mu determina il punto di massimo, trasla il grafico interamente. Sigma invece rappresenta la distanza a partire da Mu (sia sx che dx) dal quale partono i flessi. Sigma allarga la campana. **Simmetrico rispetto all'asse $\mu$ (zona di picco in $\mu$)**. **Invece $\sigma$ si riferisce ai punti di flesso. Piu' e' grande $\sigma$ e piu' la campana e' grossa**
+$\mu$ determina il punto di massimo, trasla il grafico interamente. $\sigma$ invece rappresenta la distanza a partire da $\mu$ (sia sx che dx) dal quale partono i flessi. Sigma allarga la campana. **Simmetrico rispetto all'asse $\mu$ (zona di picco in $\mu$)**. **Invece $\sigma$ si riferisce ai punti di flesso. Piu' e' grande $\sigma$ e piu' la campana e' grossa**
 
 $$
 X \sim N(\mu, \sigma) \qquad \lambda \in \R, \sigma \in \R^+

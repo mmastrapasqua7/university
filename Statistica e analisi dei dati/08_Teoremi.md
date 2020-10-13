@@ -58,15 +58,3 @@ P(|X - 50| \ge 10) \le \frac{25}{10^2} = \frac{1}{4} \implies \\
 \text{} \\
 P(|X - 50| \le 10) \ge 1 - \frac{1}{4} = \frac{3}{4}
 $$
-
-### Legge debole
-
-Mostra come la media aritmetica di n-copie indipendenti di una V.A. tende al suo valore atteso, per n che tende a infinito:
-
-$$
-\forall \epsilon \gt 0 \qquad \lim_{n \to \infin}P(|\frac{X_1 + X_2 + ... + X_n}{n} - \mu| \gt \epsilon) \to 0 \\
-\text{} \\
-\text{dove} \\
-\text{} \\
-\mu \coloneqq E(X)
-$$

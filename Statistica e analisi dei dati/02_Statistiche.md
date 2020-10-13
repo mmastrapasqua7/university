@@ -47,7 +47,7 @@ Il valore o i valori con maggior frequenza assoluta (moda se singolo, valori mod
 
 ---
 
-## Distribuzione
+## Distribuzione / Dispersione
 
 ### Varianza campionaria
 
@@ -86,6 +86,8 @@ $$
 ---
 
 ## Eterogeneita
+
+Misura la dispersione della distribuzione delle frequenze.
 
 Nel caso di variabili qualitative nominali la varianza e gli altri indici da essa derivati non si possono calcolare (infatti non sono calcolabili la media né la mediana né altri valori numerici di riferimento dai quali calcolare le distanze). È comunque necessario avere un **indice che misuri la dispersione della distribuzione delle frequenze**, detta **eterogeneità**. In particolare diremo che una variabile si distribuisce in modo eterogeneo se ogni suo valore si presenta con la stessa frequenza
 
@@ -143,11 +145,11 @@ Il procedimento di classificazione procede nel modo seguente
 
 2. Se il nodo a cui si arriva è un nodo terminale (**una foglia**), in tale nodo è indicata la classe assegnata all'oggetto, altrimenti il nodo riporta un'altra condizione da valutare, iterando il comportamento precedente fino a che non si raggiunge una foglia e quindi si determina una classe per l'oggetto.
 
-E' necessario decidere la condizione da inserire nella radice dell'albero. La scelta viene fatta considerando una serie di possibili condizioni, valutando per ognuna il modo in cui i dati risulterebbero suddivisi nei due nodi sottostanti la radice. Si può quindi utilizzare l'indice di Gini per quantificare quanto sia buona l'omogeneità: più l'indice sarà basso, più le osservazioni saranno omogenee.
+E' necessario decidere la condizione da inserire nella radice dell'albero. La scelta viene fatta considerando una serie di possibili condizioni, valutando per ognuna il modo in cui i dati risulterebbero suddivisi nei due nodi sottostanti la radice. Si può quindi utilizzare l'indice di Gini per quantificare quanto sia buona l'omogeneità: più l'indice sarà basso, più le osservazioni saranno omogenee. Quello che voglio e' che l'omogeneita' sia al massimo perche' voglio dati divisi.
 
-Una volta scelto l'attributo si puo' mantenere fisso e considerare valori diversi per la soglia, al fine di trovare il valore che minimizza l'indice di Gini medio (e quindi corrisponde al caso di migliore omogeneità)
+Una volta scelto l'attributo si puo' mantenere fisso e considerare valori diversi per la soglia, al fine di trovare il valore che minimizza l'indice di Gini medio (e quindi corrisponde al caso di massima omogeneità)
 
-Il risultato ottenuto deve metterci in guardia: non necessariamente infatti un buon compoartamento degli alberi di decisione sui dati utilizzati per costruirli è associato a un analogo comportamento nell'*indurre* etichette per dati nuovi
+Il risultato ottenuto deve metterci in guardia: non necessariamente infatti un buon comportamento degli alberi di decisione sui dati utilizzati per costruirli è associato a un analogo comportamento nell'indurre etichette per dati nuovi
 
 ---
 
@@ -259,7 +261,7 @@ $$
 }
 ```
 
-L'area compresa tra la bisettrice di 45 gradi e la curva $F_i - Q_i$ rappresenta l'area di concentrazione. Maggiore e' la concentrazione osservata, maggiore sara' l'area della differenza. Minore la concentrazione (quindi equidistribuzione), minore sara' l'area perche' la curva si posizionera' vicino la bisettrice.
+**L'area compresa tra la bisettrice di 45 gradi e la curva $F_i - Q_i$ rappresenta l'area di concentrazione**. Maggiore e' la concentrazione osservata, maggiore sara' l'area della differenza. Minore la concentrazione (quindi equidistribuzione), minore sara' l'area perche' la curva si posizionera' vicino la bisettrice.
 
 ---
 
@@ -279,12 +281,6 @@ S_T^2 = \frac{SS_T}{n - 1} \\
 S_W^2 = \frac{SS_W}{n - G} \\
 \text{} \\
 S_B^2 = \frac{SS_B}{G - 1}
-$$
-
-e quindi
-
-$$
-S_T^2 = S_W^2 + S_B^2
 $$
 
 **Possiamo utilizzare questa uguaglianza per validare o confutare l'ipotesi che le medie nei gruppi siano diverse**

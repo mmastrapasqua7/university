@@ -38,19 +38,19 @@ Dato un qualsiasi intervallo, $N(t)$ puo' essere descritta da una **distribuzion
 
 1. $N(t) = k, \quad n \gt k$
    
-   divido $[0, t]$ in $n$-sottointervalli molto piccoli, $k$-eventi. Ogni sottointervallo e' ampio  $\frac{t}{n}$ e sono tutti equiampi
+   divido $[0, t]$ in $n$-sottointervalli molto piccoli, $k$-eventi. Ogni sottointervallo e' ampio  $\frac{t}{n}$ e sono tutti equiampi. Questi intervalli sono minuscoli, infinitesimi
    
    - $A = \{1 \text{ occorrenza per ogni k-intervalli e } 0 \text{ occorrenze negli n-k intervalli}\}$
    
-   - $B = \{\text{tutti gli altri casi}\}$
+   - $B = \{\text{tutti gli altri casi}\}$, per esempio dove tutte le occorrenze occorrono in un solo intervallo
    
    - $N(t) = k \iff A \lor B$
    
-   . $A \land B = \empty \qquad$ sono disgiunti per definizione
+   - $A \land B = \empty \qquad$ sono disgiunti per definizione
    
-   . $P(B) = 0 \qquad$ perche' i sottointervalli sono molto piccoli e quindi per le proprieta' del processo stocastico questa P tende a 0
+   - $P(B) = 0 \qquad$ perche' i sottointervalli sono molto piccoli e quindi per le proprieta' del processo stocastico questa P tende a 0
    
-   . $P(N(t)=k) = P(A \lor B) = P(A) + P(B) = P(A)$
+   - $P(N(t)=k) = P(A \lor B) = P(A) + P(B) = P(A)$
 
 2. $P(A) = (\lambda \frac{t}{n})^k (1 - \lambda \frac{t}{n})^{n-k} \binom{n}{k} $
 
@@ -80,10 +80,12 @@ Usiamo delle variabili aleatorie le cui specificazioni indicano il tempo che pas
    
    - ...
 
-3- ottengo $X_1, X_2, ..., X_n \quad i.i.d.$
+3. ottengo $X_1, X_2, ..., X_n \quad i.i.d.$
 
-4- $$
-   P(X_1 \gt t) = P(\text{nessuna occorrenza tra (0, t]}) = P(N(t) = 0) = 0 \\
+4.
+
+$$
+P(X_1 \gt t) = P(\text{nessuna occorrenza tra (0, t]}) = P(N(t) = 0) = 0 \\
 \text{} \\
 P(N(t) = 0) = e^{-\lambda t} \frac{(\lambda t)^0}{0!} = e^{-\lambda t} \\
 \text{} \\
@@ -92,10 +94,12 @@ F_{X_1}(t) = P(X_1 \le t) = 1 - P(X_1 \gt t) = 1 - e^{-\lambda t} \\
 \implies \\
 \text{} \\
 X_1 \sim E(\lambda)
-   $$
+$$
 
-5- $$
-   P(X_2 \gt t | X_1 = s) = P(\text{nessuna occorrenza tra } (s, s+t]| X_1 = s) = \\
+5.
+
+$$
+P(X_2 \gt t | X_1 = s) = P(\text{nessuna occorrenza tra } (s, s+t]| X_1 = s) = \\
 \text{} \\
 = P(\text{nessuna occorrenza tra } (s, s+t]) = P(N(t) = 0) = e^{-\lambda t} \\
 \text{} \\
@@ -104,8 +108,6 @@ X_1 \sim E(\lambda)
 X_2 \sim E(\lambda) \\
 \text{} \\
 X_1 \text{ indipendente da } X_2
-   $$
-   
-   
+$$
 
-In un processo di Poisson, il numero di occorrenze all'interno di un intervallo $t$ e' distribuito secondo un modello di Poisson di $\lambda$t, dove $t$ e' la grandezza dell'intervallo, e invece l'intertempo tra un'occorrenza e' l'altra e' distribuito secondo un modello esponenziale di parametro $\lambda$ 
+In un processo di Poisson, il numero di occorrenze all'interno di un intervallo $t$ e' distribuito secondo un modello di Poisson di $\lambda$t, dove $t$ e' la grandezza dell'intervallo, e invece l'intertempo tra un'occorrenza e' l'altra e' distribuito secondo un modello esponenziale di parametro $\lambda$

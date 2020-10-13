@@ -92,7 +92,7 @@ $$
 
 - **frequenza cumulata**: puo' essere calcolata quando esiste una relazione di ordine per i valori del carattere. Considero i dati dal piu' piccolo al piu' grande, e considero  l'i-esimo valore come la somma delle frequenze di tutti i valori da 0 a i. Il numero totale di casi corrisponde all'ultimo valore della frequenza cumulata
 
-- **frequenza cumulativa empirica / ripartizione empirica**: funzione costante a tratti
+- **funzione ripartizione empirica**: funzione costante a tratti
   
   $$
   \hat{F}(x) = \frac{1}{n} \sum_{i=1}^{n} I_{(-\infin, x_i]}(x)

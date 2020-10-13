@@ -221,6 +221,8 @@ X \sim B(n, p) \\
 \text{} \\
 \implies \\
 \text{} \\
+X \sim P(np) = P(\lambda) \\
+\text{} \\
 p_X(x) \approx e^{-\lambda}\frac{\lambda^x}{x!}
 $$
 
@@ -282,7 +284,7 @@ $$
 **caratteristiche**
 
 $$
-p_X(x) = \frac{\binom{N}{x}\binom{M}{n-x}}{\binom{M + N}{n}} I_{\{0, ..., n\}}(x) \\
+p_X(x) = \frac{\binom{N}{x}\binom{M}{n-x}}{\binom{N + M}{n}} I_{\{0, ..., n\}}(x) \\
 \text{} \\
 E(X) = n \frac{N}{N + M} \\
 \text{} \\
