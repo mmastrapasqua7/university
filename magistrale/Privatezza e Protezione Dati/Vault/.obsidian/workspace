@@ -4,14 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "02bc7c2870caa9e4",
+        "id": "a527faa5af1dd900",
         "type": "leaf",
         "state": {
-          "type": "markdown",
-          "state": {
-            "file": "ProtezioneOutsourcingDati/ObfuscatedAssociation.md",
-            "mode": "source"
-          }
+          "type": "empty",
+          "state": {}
         }
       }
     ],
@@ -24,7 +21,7 @@
       {
         "id": "8ce223189ae1c186",
         "type": "tabs",
-        "dimension": 72.10834553440702,
+        "dimension": 72.6608187134503,
         "children": [
           {
             "id": "c10b10f513cc13ab",
@@ -52,9 +49,9 @@
         ]
       },
       {
-        "id": "5b3f6774a79279f5",
+        "id": "08c5222039b2ccc3",
         "type": "tabs",
-        "dimension": 27.891654465592975,
+        "dimension": 27.339181286549707,
         "children": [
           {
             "id": "18ea568a1b90ccdf",
@@ -68,7 +65,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 262
+    "width": 372
   },
   "right": {
     "id": "123f0fd661661af7",
@@ -84,7 +81,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "ProtezioneOutsourcingDati/ObfuscatedAssociation.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,17 +98,17 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "02bc7c2870caa9e4",
+  "active": "a527faa5af1dd900",
   "lastOpenFiles": [
-    "ProtezioneOutsourcingDati/ObfuscatedAssociation.md",
-    "ProtezioneOutsourcingDati/Fragmentation.md",
-    "ProtezioneOutsourcingDati/EncryptionFragmentation.md",
-    "ProtezioneOutsourcingDati/Confidentiality.md",
-    "ProtezioneOutsourcingDati/SelectiveEncryption.md",
-    "ProtezioneOutsourcingDati/Encryption.md",
-    "ProtezioneOutsourcingDati/AccessControl.md",
-    "ProtezioneOutsourcingDati/PrivacyIntegrityDataStorage.md",
+    "ProtezioneOutsourcingDati/PrivacyIntegrityDataStorage/PrivacyIntegrityDataStorage.md",
+    "ProtezioneOutsourcingDati/PrivacyIntegrityQueryComputation/PrivacyIntegrityQueryComputation.md",
     "ProtezioneOutsourcingDati/Cloud.md",
-    "ProtezioneOutsourcingDati/PrivacyOfUsers.md"
+    "ProtezioneOutsourcingDati/PrivacyIntegrityDataStorage/ObfuscatedAssociation.md",
+    "ProtezioneOutsourcingDati/PrivacyIntegrityDataStorage/Fragmentation.md",
+    "ProtezioneOutsourcingDati/PrivacyIntegrityDataStorage/EncryptionFragmentation.md",
+    "ProtezioneOutsourcingDati/PrivacyIntegrityDataStorage/Confidentiality.md",
+    "ProtezioneOutsourcingDati/PrivacyIntegrityDataStorage/SelectiveEncryption.md",
+    "ProtezioneOutsourcingDati/PrivacyIntegrityDataStorage/Encryption.md",
+    "ProtezioneOutsourcingDati/PrivacyIntegrityDataStorage/AccessControl.md"
   ]
 }
